@@ -289,6 +289,20 @@ GitHub branch protection or a ruleset can require the check after the repository
 is pushed, but that is a separate remote setting. Missing automatic GitHub
 checks do not make the Blueprint unusable.
 
+## Git identity
+
+Every commit and every push in this repository uses the owner's own GitHub
+account. This is already decided, so do not ask which account to use.
+
+- GitHub account for commits and pushes: `Aariz27`
+- Commit author email: `aarizsajan2@gmail.com`
+
+Before the first push, run `git remote -v`, `gh auth status`, and
+`git config user.email`. If all three match the values above, push without
+asking who to push as. If any one of them does not match, stop and report the
+mismatch instead of pushing. This section settles which account to use. It does
+not by itself authorize a push; the owner still has to ask for one.
+
 ## Commands
 
 Next.js 16 (App Router) + React 19 + TypeScript 5 + Tailwind CSS v4. Package
