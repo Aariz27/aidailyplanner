@@ -10,6 +10,7 @@
   --shadow-light: #ffffff;
   --shadow-dark: #c3c5ca;
   --track: #c3c5ca;
+  --done: #3f9d5c;
   color-scheme: light;
 }
 
@@ -23,6 +24,7 @@
   --shadow-light: #3c3f43;
   --shadow-dark: #1f2022;
   --track: #26272a;
+  --done: #4fbf72;
   color-scheme: dark;
 }
 
@@ -31,6 +33,7 @@
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-done: var(--done);
   --color-warn: var(--warn);
   --font-sans: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
   --radius-panel: 28px;

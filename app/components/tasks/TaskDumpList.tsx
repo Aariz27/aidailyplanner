@@ -1,7 +1,7 @@
 import TaskList from "./TaskList";
-import type { Task } from "../../types/db";
+import type { Step, Task } from "../../types/db";
 
-export default function TaskDumpList({ tasks }: { tasks: Task[] }) {
+export default function TaskDumpList({ tasks, stepsByTask }: { tasks: Task[]; stepsByTask: Record<number, Step[]> }) {
   return (
     <section aria-labelledby="dumped-heading" className="ext-lg flex flex-col gap-[18px] p-6">
       <div className="flex items-center gap-3.5">
@@ -25,7 +25,7 @@ export default function TaskDumpList({ tasks }: { tasks: Task[] }) {
           </p>
         </div>
       </div>
-      <TaskList tasks={tasks} />
+      <TaskList tasks={tasks} stepsByTask={stepsByTask} />
     </section>
   );
 }

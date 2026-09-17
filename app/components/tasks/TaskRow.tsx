@@ -3,16 +3,82 @@
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { deleteTask, updateTask } from "../../actions/tasks";
 import { formatDueDate } from "../../lib/format";
+import { PILL } from "./pill";
+import ProgressionsDialog from "./ProgressionsDialog";
 import TitleTextarea from "./TitleTextarea";
-import type { Task } from "../../types/db";
+import type { Step, Task } from "../../types/db";
 import { TASK_GONE, type ActionResult } from "../../types/tasks";
-
-const PILL = "ext-sm rounded-xl px-3.5 py-2 text-[11px] font-semibold whitespace-nowrap active:pressed";
 
 type OnResult = (result: ActionResult) => void;
 
-export default function TaskRow({ task, onResult }: { task: Task; onResult: OnResult }) {
+const MINI_MAX_BOXES = 4;
+const MINI_MAX_ARROWS = 3;
+
+type MiniItem = { kind: "box"; step: Step } | { kind: "arrow"; key: string };
+
+// Lays out box, arrow, box, ... in order and starts a new line when the next item would
+// go past four boxes or three arrows on the current line, so the overflow moves down.
+function miniLines(steps: Step[]): MiniItem[][] {
+  const lines: MiniItem[][] = [];
+  let line: MiniItem[] = [];
+  let boxes = 0;
+  let arrows = 0;
+  const place = (item: MiniItem) => {
+    const full = item.kind === "box" ? boxes === MINI_MAX_BOXES : arrows === MINI_MAX_ARROWS;
+    if (full) {
+      lines.push(line);
+      line = [];
+      boxes = 0;
+      arrows = 0;
+    }
+    line.push(item);
+    if (item.kind === "box") boxes++;
+    else arrows++;
+  };
+  steps.forEach((step, index) => {
+    if (index > 0) place({ kind: "arrow", key: `arrow-${step.id}` });
+    place({ kind: "box", step });
+  });
+  if (line.length > 0) lines.push(line);
+  return lines;
+}
+
+// A small copy of the progression chart: one rectangle per step, green when done.
+function MiniProgression({ steps }: { steps: Step[] }) {
+  const done = steps.filter((step) => step.done === 1).length;
+
+  return (
+    <span className="flex min-w-0 flex-col gap-1">
+      <span className="sr-only">
+        {steps.length} {steps.length === 1 ? "step" : "steps"}, {done} done
+      </span>
+      {miniLines(steps).map((line, lineIndex) => (
+        <span key={lineIndex} className="flex items-center" aria-hidden="true">
+          {line.map((item) =>
+            item.kind === "arrow" ? (
+              <MiniArrow key={item.key} />
+            ) : (
+              <span
+                key={item.step.id}
+                className={`inline-block h-2 w-3 rounded-[2px] border ${
+                  item.step.done === 1 ? "border-done bg-done" : "border-current"
+                }`}
+              />
+            ),
+          )}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function MiniArrow() {
+  return <span className="mx-[3px] text-[11px] leading-none">&rarr;</span>;
+}
+
+export default function TaskRow({ task, steps, onResult }: { task: Task; steps: Step[]; onResult: OnResult }) {
   const [editing, setEditing] = useState(false);
+  const [progressionsOpen, setProgressionsOpen] = useState(false);
   const editButtonRef = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef(false);
 
@@ -46,16 +112,40 @@ export default function TaskRow({ task, onResult }: { task: Task; onResult: OnRe
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-[13px] font-semibold break-words">{task.title}</div>
-        <div className="mt-[3px] truncate text-[11px] text-muted">
-          {task.due_date ? `due ${formatDueDate(task.due_date)}` : "no due date"}
+        <div className="mt-[3px] flex items-start gap-3 text-[11px] text-muted">
+          {steps.length > 0 && <MiniProgression steps={steps} />}
+          {/* 114px lines the date up with the add form's date field: its 118px width plus the
+              form's 10px right padding, minus this row's 14px right padding. */}
+          <span className="ml-auto w-[114px] shrink-0 tabular-nums">
+            {task.due_date ? formatDueDate(task.due_date) : "dd.mm.yyyy"}
+          </span>
         </div>
       </div>
-      <div className="pointer-events-none absolute top-1/2 right-3.5 flex -translate-y-1/2 gap-2 bg-bg opacity-0 transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100">
+      <div className="pointer-events-none absolute top-1/2 right-3.5 flex -translate-y-1/2 gap-2 bg-bg opacity-0 transition-opacity group-has-[:focus-visible]:pointer-events-auto group-has-[:focus-visible]:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100">
+        <button
+          type="button"
+          onClick={(event) => {
+            // Safari does not focus a clicked button, and the dialog returns focus to whatever had it.
+            event.currentTarget.focus();
+            setProgressionsOpen(true);
+          }}
+          className={PILL}
+        >
+          Add progressions
+        </button>
         <button ref={editButtonRef} type="button" onClick={() => setEditing(true)} className={PILL}>
           Edit
         </button>
         <DeleteTaskButton taskId={task.id} onResult={onResult} />
       </div>
+      {progressionsOpen && (
+        <ProgressionsDialog
+          task={task}
+          steps={steps}
+          onClose={() => setProgressionsOpen(false)}
+          onResult={onResult}
+        />
+      )}
     </li>
   );
 }

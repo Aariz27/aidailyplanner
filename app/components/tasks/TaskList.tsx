@@ -3,10 +3,10 @@
 import { useState } from "react";
 import AddTaskForm from "./AddTaskForm";
 import TaskRow from "./TaskRow";
-import type { Task } from "../../types/db";
+import type { Step, Task } from "../../types/db";
 import type { ActionResult } from "../../types/tasks";
 
-export default function TaskList({ tasks }: { tasks: Task[] }) {
+export default function TaskList({ tasks, stepsByTask }: { tasks: Task[]; stepsByTask: Record<number, Step[]> }) {
   const [notice, setNotice] = useState<string | null>(null);
 
   function handleResult(result: ActionResult) {
@@ -26,7 +26,7 @@ export default function TaskList({ tasks }: { tasks: Task[] }) {
       ) : (
         <ul className="flex flex-col gap-3.5">
           {tasks.map((task) => (
-            <TaskRow key={task.id} task={task} onResult={handleResult} />
+            <TaskRow key={task.id} task={task} steps={stepsByTask[task.id] ?? []} onResult={handleResult} />
           ))}
         </ul>
       )}
