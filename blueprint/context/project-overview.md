@@ -1,8 +1,8 @@
 # Daily Planner - Project Overview
 
-<!-- blueprint:source-hash 8602db80c7268b82b24c346e95a75e1d16eceeff6f8ab3a9fc046b3a6315ad70 -->
+<!-- blueprint:source-hash 5ab264198b05c5412180be5d0abc3e05261797e0adf8289cb5ad881d6160f76d -->
 
-> A personal planner where Aariz dumps every task, writes the intention-driven steps inside a task, and picks at most three things to do each day.
+> A personal planner where Aariz dumps every task, writes the intention-driven steps inside a task, and chooses at most three daily priorities each day.
 
 ## Problem
 
@@ -19,13 +19,13 @@ Aariz's tasks live in his head or in scattered places, and a long list does not 
 
 ## Features
 
-In build-plan order. The headline feature is **4. Pick three for today**.
+In build-plan order. The headline feature is **4. Three daily priorities for today**.
 
-1. **SQLite storage for tasks** - one SQLite file holding the tasks, steps, picks and important dates tables, so nothing is lost on reload.
+1. **SQLite storage for tasks** - one SQLite file holding the tasks, steps, daily priorities and important dates tables, so nothing is lost on reload.
 2. **Task dump list** - overview tab left sidebar: add, edit and delete tasks, each with an optional due date.
 3. **Steps inside a task** - an "Add progressions" button opens a task as a `[] -> []` flow chart, starting with two boxes and one arrow, with a button to add another `-> []`. Steps are optional per task.
-4. **Pick three for today** - overview tab middle column: at most three picks per day, each either a whole task or one single step.
-5. **Started but not completed list** - overview tab right sidebar: every past pick that was not finished.
+4. **Three daily priorities for today** - overview tab middle column: at most three daily priorities per day, each either a whole task or one single step.
+5. **Started but not completed list** - overview tab right sidebar: every past daily priority that was not finished.
 6. **Important dates box** - small box in the top right corner of the overview tab.
 7. **Strategy tab** - every task with its full progression, showing how far along each task is.
 8. **Completed tab** - finished tasks, moved off the overview.
@@ -42,9 +42,9 @@ Locked by this overview. Feature 1 creates these four tables in a SQLite file in
 - `due_date` (TEXT `YYYY-MM-DD`, nullable) - most tasks leave it empty; never required to save a task
 - `status` (TEXT, required) - one of `open`, `started`, `done`
 - `created_at` (TEXT timestamp, required) - when he dumped it
-- has many `steps`; referenced by `picks`
-- `status` moves `open` -> `started` when the task or any of its steps is picked, and -> `done` when the task is finished; `done` tasks show in the Completed tab, not the overview
-- deleting a task deletes its steps and its picks
+- has many `steps`; referenced by `daily_priorities`
+- `status` moves `open` -> `started` when the task or any of its steps is set as a daily priority, and -> `done` when the task is finished; `done` tasks show in the Completed tab, not the overview
+- deleting a task deletes its steps and its daily priorities
 
 Example row: `1 | Software Factory Build | NULL | open | 2026-09-17 09:14`
 
@@ -57,19 +57,20 @@ Example row: `1 | Software Factory Build | NULL | open | 2026-09-17 09:14`
 - `done` (INTEGER 0/1, required) - ticked or not
 - a task can have zero steps
 - a single step can be deleted without deleting its task
+- ticking a daily priority done when its `step_id` is set also sets that step's `done = 1`, and the step shows a complete indicator in the task's progression
 
 Example row: `1 | 1 | 1 | Build DevStash with AI Blueprint | 0`
 
-### picks
+### daily_priorities
 
 - `id` (INTEGER, primary key, auto)
-- `pick_date` (TEXT `YYYY-MM-DD`, required) - the day it was chosen for
+- `priority_date` (TEXT `YYYY-MM-DD`, required) - the day it was chosen for
 - `task_id` (INTEGER, required) - references `tasks.id`, always filled
-- `step_id` (INTEGER, nullable) - references `steps.id`; filled when one single step was picked, empty when the whole task was picked
+- `step_id` (INTEGER, nullable) - references `steps.id`; filled when one single step was chosen, empty when the whole task was chosen
 - `done` (INTEGER 0/1, required)
-- at most three rows per `pick_date` (hard cap)
-- a row with `done = 0` whose `pick_date` is before today is what feature 5 lists; it does not roll into tomorrow's three and is not deleted
-- an item from that list can be picked again today, as a new row for today, and it counts toward today's three
+- at most three rows per `priority_date` (hard cap)
+- a row with `done = 0` whose `priority_date` is before today is what feature 5 lists; it does not roll into tomorrow's three and is not deleted
+- an item from that list can be set as a daily priority again today, as a new row for today, and it counts toward today's three
 
 Example row: `1 | 2026-09-17 | 1 | 1 | 0`
 
@@ -96,9 +97,9 @@ None. This will not make money.
 
 ## UI/UX
 
-Must make it quick to see dumped tasks, started-but-unfinished tasks, and today's three picks. Three tabs:
+Must make it quick to see dumped tasks, started-but-unfinished tasks, and today's three daily priorities. Three tabs:
 
-- **Overview** - dumped tasks in the left sidebar, today's picks in the middle (max 3), started-but-not-completed in the right sidebar, important dates in a small box in the top right corner.
+- **Overview** - dumped tasks in the left sidebar, today's daily priorities in the middle (max 3), started-but-not-completed in the right sidebar, important dates in a small box in the top right corner.
 - **Strategy** - all tasks and their progressions.
 - **Completed** - finished tasks.
 
@@ -115,5 +116,4 @@ Adding steps: an "Add progressions" button opens the task and shows a flow chart
 
 > Resolve these in the plans, then re-run `/overview`.
 
-- **Step picks.** When a pick of a single step is ticked done, is that step's `steps.done` ticked too?
 - **Dark mode and the neumorphism look.** The approved prototype in `prototypes/` has a light/dark switch and a neumorphism style, but section 7 of the project plan records neither.

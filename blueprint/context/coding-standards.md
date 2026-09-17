@@ -67,8 +67,13 @@ There is no `src/` directory. The App Router lives at the repository root in
 
 ## Database
 
-> TODO: this project has no database, ORM, or migration tool installed yet.
-> Record the choice here when one is added, along with its migration command.
+- SQLite through `better-sqlite3`, no ORM. The file is `data/planner.db`, which
+  is gitignored because the repository is public.
+- `getDb()` in `app/lib/db.ts` opens the one connection, turns on foreign keys,
+  and creates the tables. Import it only from server code.
+- No migration tool. The schema is `CREATE ... IF NOT EXISTS` in `app/lib/db.ts`.
+- A page that reads the database sets `export const dynamic = "force-dynamic"` so
+  `npm run build` never opens `data/planner.db`.
 
 ## Authentication
 

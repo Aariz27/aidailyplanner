@@ -12,7 +12,7 @@
 
 Aariz keeps every task in his head or scattered across places, and a long list of
 tasks does not tell him what to actually do today. He needs one place to dump
-every task, then pick a small number of them for the day so the day has a clear
+every task, then choose a small number of them for the day so the day has a clear
 shape.
 
 A second problem: a task written as a single line hides the real point of doing
@@ -43,9 +43,9 @@ Aariz, on his own. One person planning his own day.
 
 - A single list where every task gets dumped, with no ordering pressure
 - Ordered steps written inside a task, in Aariz's own words, describing intention
-- Picking exactly three things for today
-- A pick can be a whole task, or one single step from inside a task
-- A view of today showing the three picks
+- Choosing exactly three daily priorities for today
+- A daily priority can be a whole task, or one single step from inside a task
+- A view of today showing the three daily priorities
 - A view of how far along each task is, step by step
 - A place for small important details and their dates, for example the semester
   start date or the Claude Code token expiry date
@@ -59,24 +59,27 @@ Aariz, on his own. One person planning his own day.
 - **Step** - one entry inside a task's progression, written by Aariz, in order,
   each one either done or not done. A task can have no steps at all. Writing the
   steps is optional per task, never compulsory.
-- **Today's pick** - a record that a whole task, or one specific step, was chosen
+- **Daily priority** - a record that a whole task, or one specific step, was chosen
   for a given date. There are three of these per day, and three is a hard cap.
 - **Detail** - a small fact to remember, with its text and its date, for example
   "semester starts" with a date.
 
-A pick that Aariz does not finish on the day he picked it is not dropped and does
+A daily priority that Aariz does not finish on the day he chose it is not dropped and does
 not move to tomorrow's three. It shows up in a separate list of everything he has
 started and not yet completed, which sits in the right sidebar of the overview
 tab.
 
 Rules for how tasks move:
 
-- Picking a task, or a step inside it, changes the task's `status` to `started`.
+- Setting a task, or a step inside it, as a daily priority changes the task's `status` to `started`.
 - Finishing a task changes its `status` to `done`, and the task moves to the
   Completed tab.
-- Aariz can pick an item from the started-but-not-completed list again today,
-  and that pick counts toward today's three.
-- Deleting a whole task deletes everything inside it: its steps and its picks.
+- Aariz can set an item from the started-but-not-completed list as a daily
+  priority again today, and it counts toward today's three.
+- Ticking a daily priority as done, when that daily priority is one step inside
+  a task, also marks that step as done, and the step shows a complete indicator
+  in the task's progression.
+- Deleting a whole task deletes everything inside it: its steps and its daily priorities.
 - Aariz can also delete a single step inside a task without deleting the task.
 
 ### Draft columns, with one real row each
@@ -107,20 +110,20 @@ Draft only. Change any column name, type or row before `/overview` locks it.
 - `title` (text, required) - the step in his own words
 - `done` (boolean) - ticked or not
 
-**picks**
+**daily_priorities**
 
-| id | pick_date | task_id | step_id | done |
+| id | priority_date | task_id | step_id | done |
 |----|-----------|---------|---------|------|
 | 1 | 2026-09-17 | 1 | 1 | no |
 
 - `id` (integer, auto)
-- `pick_date` (date) - the day this was chosen for
+- `priority_date` (date) - the day this was chosen for
 - `task_id` (integer) - always filled
-- `step_id` (integer, optional) - filled when he picked one single step instead of
-  the whole task; empty when he picked the whole task
-- `done` (boolean) - a pick left at `no` after its day is what shows in the
+- `step_id` (integer, optional) - filled when he chose one single step instead of
+  the whole task; empty when he chose the whole task
+- `done` (boolean) - a daily priority left at `no` after its day is what shows in the
   started-but-not-completed sidebar
-- At most three rows are allowed per `pick_date`
+- At most three rows are allowed per `priority_date`
 
 **important_dates**
 
@@ -153,7 +156,7 @@ This will not make money.
 
 ## 7. UI/UX - How should this look and feel?
 
-The UI and UX need to support the ability to quickly see what tasks i have dumped, which ones are started but not yet finished and whats planned for today (the 3 priorities. Max = 3. Complete tasks can be in a different tab. 
+The UI and UX need to support the ability to quickly see what tasks i have dumped, which ones are started but not yet finished and whats planned for today (the 3 priorities. Max = 3). Complete tasks can be in a different tab. 
 
 Adding progression tasks to general tasks should be as easy as clicking a "add progressions" which opens the task up and displays a flow chart style diagram like [] -> [] with the default being 2 nodes with one arrow between them and then add option to add " -> []"
 
@@ -171,7 +174,7 @@ Consequently, there will be 3 tabs,
 *third* is the complete tasks
 
 **Approved Design**
-Neumorphism. Located in prototypes/
+Neumorphism with dark mode. Located in prototypes/
 
 ## 8. Deployment - Where and how will this ship?
 
