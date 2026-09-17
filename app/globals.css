@@ -1,26 +1,91 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #e4e5e7;
+  --surface: #e4e5e7;
+  --text: #34353a;
+  --muted: #8c8e94;
+  --accent: #34353a;
+  --warn: #8c8e94;
+  --shadow-light: #ffffff;
+  --shadow-dark: #c3c5ca;
+  --track: #c3c5ca;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #303234;
+  --surface: radial-gradient(120% 120% at 30% 25%, #34373a 0%, #2e3134 55%, #29282e 100%);
+  --text: #d6d8dc;
+  --muted: #868a91;
+  --accent: #3fa3ea;
+  --warn: #f0892b;
+  --shadow-light: #3c3f43;
+  --shadow-dark: #1f2022;
+  --track: #26272a;
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-warn: var(--warn);
+  --font-sans: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
+  --radius-panel: 28px;
+  --radius-row: 18px;
+  --radius-field: 14px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* `background` rather than `background-color`, because the dark surface is a gradient. */
+@utility ext-lg {
+  background: var(--surface);
+  border-radius: var(--radius-panel);
+  box-shadow: -8px -8px 18px var(--shadow-light), 8px 8px 18px var(--shadow-dark);
+}
+
+@utility ext-sm {
+  background: var(--surface);
+  border-radius: var(--radius-row);
+  box-shadow: -4px -4px 10px var(--shadow-light), 4px 4px 10px var(--shadow-dark);
+}
+
+@utility inset-lg {
+  background: var(--bg);
+  border-radius: var(--radius-row);
+  box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+}
+
+@utility inset-sm {
+  background: var(--bg);
+  border-radius: var(--radius-field);
+  box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+}
+
+@utility circle-inset {
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+}
+
+@utility pressed {
+  box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.5;
 }

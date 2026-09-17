@@ -17,7 +17,7 @@ Start with your first real slice of functionality.
 ## Your features
 
 - [x] 1. **SQLite storage for tasks** - create one SQLite file in the project with tables for tasks, steps, daily priorities and important dates, so nothing is lost on reload
-- [ ] 2. **Task dump list** - the left sidebar of the overview tab where Aariz adds, edits and deletes tasks, each with an optional due date
+- [x] 2. **Task dump list** - the left sidebar of the overview tab where Aariz adds, edits and deletes tasks, each with an optional due date
 - [ ] 3. **Steps inside a task** - an "add progressions" button opens the task and shows a flow chart of `[] -> []`, starting with two boxes and one arrow, with a button to add another `-> []`
 - [ ] 4. **Three daily priorities for today** - the middle column of the overview tab, holding at most three daily priorities, where each daily priority is either a whole task or one single step from inside a task
 - [ ] 5. **Started but not completed list** - the right sidebar of the overview tab, listing every daily priority Aariz did not finish
