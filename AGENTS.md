@@ -303,6 +303,8 @@ asking who to push as. If any one of them does not match, stop and report the
 mismatch instead of pushing. This section settles which account to use. It does
 not by itself authorize a push; the owner still has to ask for one.
 
+Git repo is public so no secrets shall be commited.
+
 ## Commands
 
 Next.js 16 (App Router) + React 19 + TypeScript 5 + Tailwind CSS v4. Package

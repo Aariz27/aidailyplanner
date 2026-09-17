@@ -43,3 +43,9 @@ next-env.d.ts
 # local claude code session logs
 sessions.json
 .sessions-state.json
+
+# design prototypes, discarded once the look is built into the app
+prototypes/
+
+# local SQLite database with real tasks, never committed
+data/
