@@ -11,6 +11,8 @@
   --shadow-dark: #c3c5ca;
   --track: #c3c5ca;
   --done: #3f9d5c;
+  --open: #2f6fd0;
+  --started: #b8791a;
   color-scheme: light;
 }
 
@@ -25,6 +27,8 @@
   --shadow-dark: #1f2022;
   --track: #26272a;
   --done: #4fbf72;
+  --open: #3fa3ea;
+  --started: #f0b429;
   color-scheme: dark;
 }
 
@@ -34,6 +38,9 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-done: var(--done);
+  --color-open: var(--open);
+  --color-started: var(--started);
+  --color-track: var(--track);
   --color-warn: var(--warn);
   --font-sans: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
   --radius-panel: 28px;

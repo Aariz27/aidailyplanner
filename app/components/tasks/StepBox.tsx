@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
+import { setDailyPriority } from "../../actions/priorities";
 import { createStep, deleteStep, updateStep } from "../../actions/steps";
 import { PILL } from "./pill";
 import TitleTextarea from "./TitleTextarea";
@@ -13,6 +14,8 @@ type Props = {
   taskId: number;
   number: number;
   step: Step | null;
+  alreadyToday: boolean;
+  todayFull: boolean;
   autoFocus: boolean;
   onSavingChange: (saving: boolean) => void;
   onSaved: () => void;
@@ -24,6 +27,8 @@ export default function StepBox({
   taskId,
   number,
   step,
+  alreadyToday,
+  todayFull,
   autoFocus,
   onSavingChange,
   onSaved,
@@ -112,8 +117,81 @@ export default function StepBox({
           {error}
         </p>
       )}
-      {step && <DeleteStepButton stepId={step.id} onDeleted={onDeleted} onGone={onGone} onError={setError} />}
+      {step && (
+        <div className="flex flex-wrap gap-2">
+          <SetStepPriorityButton
+            taskId={taskId}
+            stepId={step.id}
+            disabled={todayFull || alreadyToday}
+            onSavingChange={onSavingChange}
+            onSaved={onSaved}
+            onGone={onGone}
+            onError={setError}
+          />
+          <DeleteStepButton stepId={step.id} onDeleted={onDeleted} onGone={onGone} onError={setError} />
+        </div>
+      )}
     </div>
+  );
+}
+
+type SetPriorityProps = {
+  taskId: number;
+  stepId: number;
+  disabled: boolean;
+  onSavingChange: (saving: boolean) => void;
+  onSaved: () => void;
+  onGone: (result: ActionResult) => void;
+  onError: (error: string | null) => void;
+};
+
+function SetStepPriorityButton({
+  taskId,
+  stepId,
+  disabled,
+  onSavingChange,
+  onSaved,
+  onGone,
+  onError,
+}: SetPriorityProps) {
+  const [pending, setPending] = useState(false);
+
+  async function set() {
+    const formData = new FormData();
+    formData.set("task_id", String(taskId));
+    formData.set("step_id", String(stepId));
+    setPending(true);
+    onSavingChange(true);
+    let result: ActionResult;
+    try {
+      result = await setDailyPriority(null, formData);
+    } catch (caught) {
+      console.error("Setting a step as a daily priority failed", caught);
+      result = { success: false, error: UNEXPECTED };
+    } finally {
+      setPending(false);
+      onSavingChange(false);
+    }
+
+    if (result.success) {
+      onError(null);
+      onSaved();
+    } else if (result.error === STEP_GONE || result.error === TASK_GONE) {
+      onGone(result);
+    } else {
+      onError(result.error);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void set()}
+      disabled={pending || disabled}
+      className={`${PILL} self-start`}
+    >
+      Set as daily priority
+    </button>
   );
 }
 

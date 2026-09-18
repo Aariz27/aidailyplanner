@@ -49,3 +49,6 @@ prototypes/
 
 # local SQLite database with real tasks, never committed
 data/
+
+# claude session info
+sessions.json

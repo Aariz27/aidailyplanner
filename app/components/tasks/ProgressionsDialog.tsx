@@ -12,11 +12,20 @@ const MIN_BOXES = 2;
 type Props = {
   task: Task;
   steps: Step[];
+  todayStepIds: number[];
+  todayFull: boolean;
   onClose: () => void;
   onResult: (result: ActionResult) => void;
 };
 
-export default function ProgressionsDialog({ task, steps, onClose, onResult }: Props) {
+export default function ProgressionsDialog({
+  task,
+  steps,
+  todayStepIds,
+  todayFull,
+  onClose,
+  onResult,
+}: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const headingId = useId();
   // Every empty box, keyed by a local counter so a box keeps its typed text when another box saves.
@@ -127,6 +136,8 @@ export default function ProgressionsDialog({ task, steps, onClose, onResult }: P
                   taskId={task.id}
                   number={index + 1}
                   step={box.step}
+                  alreadyToday={box.step !== null && todayStepIds.includes(box.step.id)}
+                  todayFull={todayFull}
                   autoFocus={box.draftKey !== null && box.draftKey === focusDraft}
                   onSavingChange={handleSavingChange}
                   onSaved={() => handleSaved(box.draftKey)}

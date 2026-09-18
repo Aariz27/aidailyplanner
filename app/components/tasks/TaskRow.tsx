@@ -1,15 +1,23 @@
 "use client";
 
 import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { setDailyPriority } from "../../actions/priorities";
 import { deleteTask, updateTask } from "../../actions/tasks";
 import { formatDueDate } from "../../lib/format";
 import { PILL } from "./pill";
 import ProgressionsDialog from "./ProgressionsDialog";
 import TitleTextarea from "./TitleTextarea";
-import type { Step, Task } from "../../types/db";
+import type { Step, Task, TaskStatus } from "../../types/db";
 import { TASK_GONE, type ActionResult } from "../../types/tasks";
 
 type OnResult = (result: ActionResult) => void;
+
+// The row's outline carries the same colour as the task's status buttons on its card.
+const STATUS_OUTLINE: Record<TaskStatus, string> = {
+  open: "border-open",
+  started: "border-started",
+  done: "border-done",
+};
 
 const MINI_MAX_BOXES = 4;
 const MINI_MAX_ARROWS = 3;
@@ -76,9 +84,24 @@ function MiniArrow() {
   return <span className="mx-[3px] text-[11px] leading-none">&rarr;</span>;
 }
 
-export default function TaskRow({ task, steps, onResult }: { task: Task; steps: Step[]; onResult: OnResult }) {
+export default function TaskRow({
+  task,
+  steps,
+  hasPriority,
+  alreadyToday,
+  todayStepIds,
+  todayFull,
+  onResult,
+}: {
+  task: Task;
+  steps: Step[];
+  hasPriority: boolean;
+  alreadyToday: boolean;
+  todayStepIds: number[];
+  todayFull: boolean;
+  onResult: OnResult;
+}) {
   const [editing, setEditing] = useState(false);
-  const [progressionsOpen, setProgressionsOpen] = useState(false);
   const editButtonRef = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef(false);
 
@@ -94,10 +117,24 @@ export default function TaskRow({ task, steps, onResult }: { task: Task; steps: 
     setEditing(false);
   }
 
-  if (editing) return <EditTaskForm task={task} onClose={closeEditor} onResult={onResult} />;
+  if (editing)
+    return (
+      <EditTaskForm
+        task={task}
+        steps={steps}
+        todayStepIds={todayStepIds}
+        todayFull={todayFull}
+        onClose={closeEditor}
+        onResult={onResult}
+      />
+    );
 
   return (
-    <li className="group ext-sm relative flex min-h-16 items-center gap-3.5 overflow-hidden px-3.5 py-3">
+    <li
+      className={`group ext-sm relative flex min-h-16 items-center gap-3.5 overflow-hidden border px-3.5 py-3 ${
+        hasPriority ? STATUS_OUTLINE[task.status] : "border-transparent"
+      }`}
+    >
       <div className="circle-inset flex h-[38px] w-[38px] shrink-0 items-center justify-center">
         <svg
           viewBox="0 0 24 24"
@@ -122,35 +159,64 @@ export default function TaskRow({ task, steps, onResult }: { task: Task; steps: 
         </div>
       </div>
       <div className="pointer-events-none absolute top-1/2 right-3.5 flex -translate-y-1/2 gap-2 bg-bg opacity-0 transition-opacity group-has-[:focus-visible]:pointer-events-auto group-has-[:focus-visible]:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100">
-        <button
-          type="button"
-          onClick={(event) => {
-            // Safari does not focus a clicked button, and the dialog returns focus to whatever had it.
-            event.currentTarget.focus();
-            setProgressionsOpen(true);
-          }}
-          className={PILL}
-        >
-          Add progressions
-        </button>
+        <SetPriorityButton
+          taskId={task.id}
+          disabled={todayFull || alreadyToday}
+          onResult={onResult}
+        />
         <button ref={editButtonRef} type="button" onClick={() => setEditing(true)} className={PILL}>
           Edit
         </button>
         <DeleteTaskButton taskId={task.id} onResult={onResult} />
       </div>
-      {progressionsOpen && (
-        <ProgressionsDialog
-          task={task}
-          steps={steps}
-          onClose={() => setProgressionsOpen(false)}
-          onResult={onResult}
-        />
-      )}
     </li>
   );
 }
 
-function EditTaskForm({ task, onClose, onResult }: { task: Task; onClose: () => void; onResult: OnResult }) {
+function SetPriorityButton({
+  taskId,
+  disabled,
+  onResult,
+}: {
+  taskId: number;
+  disabled: boolean;
+  onResult: OnResult;
+}) {
+  const [, formAction, pending] = useActionState(
+    async (prev: ActionResult | null, formData: FormData) => {
+      const result = await setDailyPriority(prev, formData);
+      onResult(result);
+      return result;
+    },
+    null,
+  );
+
+  return (
+    <form action={formAction}>
+      <input type="hidden" name="task_id" value={taskId} />
+      <button type="submit" disabled={pending || disabled} className={PILL}>
+        Set as daily priority
+      </button>
+    </form>
+  );
+}
+
+function EditTaskForm({
+  task,
+  steps,
+  todayStepIds,
+  todayFull,
+  onClose,
+  onResult,
+}: {
+  task: Task;
+  steps: Step[];
+  todayStepIds: number[];
+  todayFull: boolean;
+  onClose: () => void;
+  onResult: OnResult;
+}) {
+  const [progressionsOpen, setProgressionsOpen] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [dueDate, setDueDate] = useState(task.due_date ?? "");
   const titleId = useId();
@@ -174,7 +240,8 @@ function EditTaskForm({ task, onClose, onResult }: { task: Task; onClose: () => 
       <form
         action={formAction}
         onKeyDown={(event) => {
-          if (event.key === "Escape") onClose();
+          // While the progressions pop-up is open, Escape belongs to the pop-up.
+          if (event.key === "Escape" && !progressionsOpen) onClose();
         }}
         className="flex flex-col gap-2"
       >
@@ -206,6 +273,17 @@ function EditTaskForm({ task, onClose, onResult }: { task: Task; onClose: () => 
             className="inset-sm px-3 py-1.5 text-[11px] text-text outline-none"
           />
           <div className="ml-auto flex gap-2">
+            <button
+              type="button"
+              onClick={(event) => {
+                // Safari does not focus a clicked button, and the pop-up returns focus to whatever had it.
+                event.currentTarget.focus();
+                setProgressionsOpen(true);
+              }}
+              className={PILL}
+            >
+              Add progressions
+            </button>
             <button type="button" onClick={onClose} className={PILL}>
               Cancel
             </button>
@@ -220,6 +298,16 @@ function EditTaskForm({ task, onClose, onResult }: { task: Task; onClose: () => 
           </p>
         )}
       </form>
+      {progressionsOpen && (
+        <ProgressionsDialog
+          task={task}
+          steps={steps}
+          todayStepIds={todayStepIds}
+          todayFull={todayFull}
+          onClose={() => setProgressionsOpen(false)}
+          onResult={onResult}
+        />
+      )}
     </li>
   );
 }

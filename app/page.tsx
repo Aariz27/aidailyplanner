@@ -1,15 +1,32 @@
 import ThemeToggle from "./components/theme/ThemeToggle";
 import TaskDumpList from "./components/tasks/TaskDumpList";
+import TodayColumn from "./components/priorities/TodayColumn";
+import TodayGauge from "./components/priorities/TodayGauge";
 import { listDumpTasks, listStepsForDumpTasks } from "./lib/tasks";
+import {
+  listStepsForTodayPriorities,
+  listTaskIdsWithPriorities,
+  listTodayPriorities,
+  todayDate,
+} from "./lib/priorities";
 import type { Step } from "./types/db";
 
 export const dynamic = "force-dynamic";
 
 export default function Home() {
   const tasks = listDumpTasks();
+  const today = todayDate();
+  const priorities = listTodayPriorities(today);
+  const tasksWithPriorities = listTaskIdsWithPriorities();
+  const todayTaskIds = priorities.filter((row) => row.step_id === null).map((row) => row.task_id);
+  const todayStepIds = priorities
+    .map((row) => row.step_id)
+    .filter((stepId): stepId is number => stepId !== null);
   const stepsByTask: Record<number, Step[]> = {};
-  for (const step of listStepsForDumpTasks()) {
-    (stepsByTask[step.task_id] ??= []).push(step);
+  for (const step of [...listStepsForDumpTasks(), ...listStepsForTodayPriorities(today)]) {
+    const steps = (stepsByTask[step.task_id] ??= []);
+    // A task can come from both queries; keep one copy of each step.
+    if (!steps.some((existing) => existing.id === step.id)) steps.push(step);
   }
 
   return (
@@ -18,7 +35,16 @@ export default function Home() {
         <ThemeToggle />
       </div>
       <div className="grid grid-cols-[1fr_1.25fr_1fr] items-start gap-7">
-        <TaskDumpList tasks={tasks} stepsByTask={stepsByTask} />
+        <TaskDumpList
+          tasks={tasks}
+          stepsByTask={stepsByTask}
+          tasksWithPriorities={tasksWithPriorities}
+          todayTaskIds={todayTaskIds}
+          todayStepIds={todayStepIds}
+          todayFull={priorities.length >= 3}
+        />
+        <TodayColumn priorities={priorities} stepsByTask={stepsByTask} />
+        <TodayGauge priorities={priorities} />
       </div>
     </main>
   );

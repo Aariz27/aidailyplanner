@@ -1,10 +1,25 @@
 import TaskList from "./TaskList";
 import type { Step, Task } from "../../types/db";
 
-export default function TaskDumpList({ tasks, stepsByTask }: { tasks: Task[]; stepsByTask: Record<number, Step[]> }) {
+export default function TaskDumpList({
+  tasks,
+  stepsByTask,
+  tasksWithPriorities,
+  todayTaskIds,
+  todayStepIds,
+  todayFull,
+}: {
+  tasks: Task[];
+  stepsByTask: Record<number, Step[]>;
+  tasksWithPriorities: number[];
+  todayTaskIds: number[];
+  todayStepIds: number[];
+  todayFull: boolean;
+}) {
   return (
     <section aria-labelledby="dumped-heading" className="ext-lg flex flex-col gap-[18px] p-6">
-      <div className="flex items-center gap-3.5">
+      {/* pl-[11px] puts the 44px circle on the same centre line as the row icons below. */}
+      <div className="flex items-center gap-3.5 pl-[11px]">
         <div className="circle-inset flex h-11 w-11 shrink-0 items-center justify-center">
           <svg
             viewBox="0 0 24 24"
@@ -25,7 +40,14 @@ export default function TaskDumpList({ tasks, stepsByTask }: { tasks: Task[]; st
           </p>
         </div>
       </div>
-      <TaskList tasks={tasks} stepsByTask={stepsByTask} />
+      <TaskList
+        tasks={tasks}
+        stepsByTask={stepsByTask}
+        tasksWithPriorities={tasksWithPriorities}
+        todayTaskIds={todayTaskIds}
+        todayStepIds={todayStepIds}
+        todayFull={todayFull}
+      />
     </section>
   );
 }

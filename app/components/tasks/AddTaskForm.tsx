@@ -28,7 +28,8 @@ export default function AddTaskForm({ onResult }: { onResult: (result: ActionRes
 
   return (
     <form action={formAction} className="flex flex-col gap-2">
-      <div className="inset-lg flex min-h-[52px] items-center gap-3 py-2 pr-2.5 pl-2">
+      {/* pl-[15px] puts the 36px plus button on the same centre line as the row icons. */}
+      <div className="inset-lg flex min-h-[52px] items-center gap-3 py-2 pr-2.5 pl-[15px]">
         <button
           type="submit"
           disabled={pending}

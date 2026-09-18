@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS daily_priorities (
   priority_date TEXT NOT NULL,
   task_id INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
   step_id INTEGER REFERENCES steps(id) ON DELETE CASCADE,
-  done INTEGER NOT NULL DEFAULT 0 CHECK (done IN (0, 1))
+  done INTEGER NOT NULL DEFAULT 0 CHECK (done IN (0, 1)),
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'started', 'done'))
 );
 
 CREATE INDEX IF NOT EXISTS steps_task_id ON steps(task_id);
@@ -58,6 +59,21 @@ export function getDb(): Database.Database {
   conn.pragma("foreign_keys = ON");
   conn.pragma("journal_mode = WAL");
   conn.exec(SCHEMA);
+  addPriorityStatus(conn);
   db = conn;
   return db;
+}
+
+// CREATE TABLE IF NOT EXISTS leaves a table that already exists alone, so the database
+// created before feature 4 needs the status column added to daily_priorities.
+function addPriorityStatus(conn: Database.Database): void {
+  const columns = conn.prepare("PRAGMA table_info(daily_priorities)").all() as { name: string }[];
+  if (columns.some((column) => column.name === "status")) return;
+
+  conn.transaction(() => {
+    conn.exec(
+      "ALTER TABLE daily_priorities ADD COLUMN status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'started', 'done'))",
+    );
+    conn.exec("UPDATE daily_priorities SET status = 'done' WHERE done = 1");
+  })();
 }

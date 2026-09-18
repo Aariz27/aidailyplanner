@@ -22,6 +22,15 @@ export interface DailyPriority {
   task_id: number;
   step_id: number | null;
   done: 0 | 1;
+  status: TaskStatus;
+}
+
+// One daily priority with the task, and the step when one was chosen, read in a single query.
+export interface TodayPriority extends DailyPriority {
+  task_title: string;
+  task_due_date: string | null;
+  step_title: string | null;
+  step_position: number | null;
 }
 
 export interface ImportantDate {

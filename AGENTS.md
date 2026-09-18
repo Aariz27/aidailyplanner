@@ -289,6 +289,13 @@ GitHub branch protection or a ruleset can require the check after the repository
 is pushed, but that is a separate remote setting. Missing automatic GitHub
 checks do not make the Blueprint unusable.
 
+## Prototypes folder
+
+Keep `prototypes/` until feature 8 (Completed tab) is complete. It holds the only
+mockups for the overview's middle column, right column and important dates box.
+`/complete` must not delete it when a feature before feature 8 ports its look,
+even though the Complete skill says to discard consumed prototypes.
+
 ## Git identity
 
 Every commit and every push in this repository uses the owner's own GitHub
@@ -300,8 +307,14 @@ account. This is already decided, so do not ask which account to use.
 Before the first push, run `git remote -v`, `gh auth status`, and
 `git config user.email`. If all three match the values above, push without
 asking who to push as. If any one of them does not match, stop and report the
-mismatch instead of pushing. This section settles which account to use. It does
-not by itself authorize a push; the owner still has to ask for one.
+mismatch instead of pushing. This section settles which account to use.
+
+When the owner approves a commit, that approval also covers pushing it: after the
+commit, push the branch to `origin` (https://github.com/Aariz27/aidailyplanner)
+without asking again, as long as the three checks above still match. This
+includes the squash-merge commit on `main` that `/complete` makes. Pushing still
+needs a commit approval from the owner in the current chat; nothing else counts
+as permission to push.
 
 Git repo is public so no secrets shall be commited.
 
