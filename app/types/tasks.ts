@@ -6,3 +6,4 @@ export const STEP_GONE = "That step no longer exists.";
 export const PRIORITY_GONE = "That daily priority no longer exists.";
 export const TODAY_FULL = "Today already has three daily priorities.";
 export const ALREADY_TODAY = "That is already one of today's daily priorities.";
+export const DATE_GONE = "That date no longer exists.";

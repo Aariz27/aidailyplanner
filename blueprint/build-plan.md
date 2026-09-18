@@ -21,7 +21,7 @@ Start with your first real slice of functionality.
 - [x] 3. **Steps inside a task** - an "add progressions" button opens the task and shows a flow chart of `[] -> []`, starting with two boxes and one arrow, with a button to add another `-> []`
 - [x] 4. **Three daily priorities for today** - the middle column of the overview tab, holding at most three daily priorities, where each daily priority is either a whole task or one single step from inside a task
 - [x] 5. **Started but not completed list** - the right sidebar of the overview tab, listing every daily priority Aariz did not finish
-- [ ] 6. **Important dates box** - a small box in the top right corner of the overview tab showing facts like the semester start date and the Claude Code token expiry date
+- [x] 6. **Important dates box** - a small box in the top right corner of the overview tab showing facts like the semester start date and the Claude Code token expiry date
 - [ ] 7. **Strategy tab** - a second tab listing every task with its full progression
 - [ ] 8. **Completed tab** - a third tab holding the finished tasks so they leave the overview
 - [ ] 9. **Run it on Aariz's own server** - one documented command that builds the app and serves it locally, so it is never put on the public internet

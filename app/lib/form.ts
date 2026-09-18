@@ -6,8 +6,8 @@ export function parseTitle(formData: FormData, emptyError: string): Parsed<strin
   return title ? { ok: true, value: title } : { ok: false, error: emptyError };
 }
 
-export function parseDueDate(formData: FormData, badError: string): Parsed<string | null> {
-  const raw = formData.get("due_date");
+export function parseDueDate(formData: FormData, badError: string, field = "due_date"): Parsed<string | null> {
+  const raw = formData.get(field);
   if (raw === null || raw === "") return { ok: true, value: null };
   if (typeof raw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
     return { ok: false, error: badError };

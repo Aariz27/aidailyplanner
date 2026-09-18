@@ -79,6 +79,17 @@
   box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
 }
 
+@utility circle-ext {
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: -4px -4px 10px var(--shadow-light), 4px 4px 10px var(--shadow-dark);
+}
+
+/* The masthead's outlined word. */
+@utility masthead-outline {
+  -webkit-text-stroke: 1.5px var(--text);
+}
+
 @utility pressed {
   box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
 }
