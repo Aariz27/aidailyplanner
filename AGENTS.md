@@ -325,7 +325,9 @@ manager: npm (`package-lock.json`).
 
 - Dev server: `npm run dev` (http://localhost:3000)
 - Build: `npm run build`
-- Production server: `npm run start`
+- Production server: `npm run start` (listens on 127.0.0.1 only, so it is never
+  reachable from other machines)
+- Build and serve in one command: `npm run serve` (http://localhost:3000)
 - Lint: `npm run lint`
 - Typecheck: `npx tsc --noEmit`
 - Tests: none configured. There is no test runner in this project yet, so there
