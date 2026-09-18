@@ -1,10 +1,10 @@
-import ThemeToggle from "./components/theme/ThemeToggle";
+import PageHeader from "./components/layout/PageHeader";
 import TaskDumpList from "./components/tasks/TaskDumpList";
 import TodayColumn from "./components/priorities/TodayColumn";
 import TodayGauge from "./components/priorities/TodayGauge";
 import StartedList from "./components/priorities/StartedList";
 import DatesBox from "./components/dates/DatesBox";
-import { daysBetween, listImportantDates, longDate } from "./lib/dates";
+import { daysBetween, listImportantDates } from "./lib/dates";
 import { listDumpTasks, listStepsForDumpTasks } from "./lib/tasks";
 import {
   listStepsForTodayPriorities,
@@ -37,19 +37,7 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-[1280px] p-12">
-      <div className="mb-7 flex justify-end">
-        <ThemeToggle />
-      </div>
-      <header className="mb-9 flex items-start justify-between gap-7">
-        <div>
-          <h1 className="text-[56px] leading-none whitespace-nowrap">
-            <span className="masthead-outline font-normal text-transparent">DAILY</span>
-            <span className="font-medium tracking-[.02em]">PLANNER</span>
-          </h1>
-          <p className="mt-3.5 ml-1 text-sm text-muted">{longDate(today)}</p>
-        </div>
-        <DatesBox dates={dates} />
-      </header>
+      <PageHeader active="overview" today={today} aside={<DatesBox dates={dates} />} />
       <div className="grid grid-cols-[1fr_1.25fr_1fr] items-start gap-7">
         <TaskDumpList
           tasks={tasks}

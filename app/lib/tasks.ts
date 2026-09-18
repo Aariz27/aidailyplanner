@@ -16,3 +16,16 @@ export function listStepsForDumpTasks(): Step[] {
     )
     .all() as Step[];
 }
+
+// Every task of every status, for the Strategy tab.
+export function listAllTasks(): Task[] {
+  return getDb()
+    .prepare("SELECT id, title, due_date, status, created_at FROM tasks ORDER BY id DESC")
+    .all() as Task[];
+}
+
+export function listAllSteps(): Step[] {
+  return getDb()
+    .prepare("SELECT id, task_id, position, title, done FROM steps ORDER BY task_id, position")
+    .all() as Step[];
+}
