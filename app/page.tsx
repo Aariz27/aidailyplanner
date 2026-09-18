@@ -2,9 +2,11 @@ import ThemeToggle from "./components/theme/ThemeToggle";
 import TaskDumpList from "./components/tasks/TaskDumpList";
 import TodayColumn from "./components/priorities/TodayColumn";
 import TodayGauge from "./components/priorities/TodayGauge";
+import StartedList from "./components/priorities/StartedList";
 import { listDumpTasks, listStepsForDumpTasks } from "./lib/tasks";
 import {
   listStepsForTodayPriorities,
+  listStartedNotCompleted,
   listTaskIdsWithPriorities,
   listTodayPriorities,
   todayDate,
@@ -17,6 +19,7 @@ export default function Home() {
   const tasks = listDumpTasks();
   const today = todayDate();
   const priorities = listTodayPriorities(today);
+  const started = listStartedNotCompleted(today);
   const tasksWithPriorities = listTaskIdsWithPriorities();
   const todayTaskIds = priorities.filter((row) => row.step_id === null).map((row) => row.task_id);
   const todayStepIds = priorities
@@ -44,7 +47,10 @@ export default function Home() {
           todayFull={priorities.length >= 3}
         />
         <TodayColumn priorities={priorities} stepsByTask={stepsByTask} />
-        <TodayGauge priorities={priorities} />
+        <div className="flex flex-col gap-7">
+          <TodayGauge priorities={priorities} />
+          <StartedList items={started} todayFull={priorities.length >= 3} />
+        </div>
       </div>
     </main>
   );

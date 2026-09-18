@@ -38,3 +38,15 @@ export interface ImportantDate {
   label: string;
   on_date: string;
 }
+
+// One item started on an earlier day and not finished, for the right sidebar.
+export interface StartedItem {
+  task_id: number;
+  step_id: number | null;
+  chosen_date: string;
+  task_title: string;
+  task_due_date: string | null;
+  step_title: string | null;
+  step_position: number | null;
+  step_count: number;
+}
