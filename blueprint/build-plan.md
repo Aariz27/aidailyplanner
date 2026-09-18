@@ -23,5 +23,5 @@ Start with your first real slice of functionality.
 - [x] 5. **Started but not completed list** - the right sidebar of the overview tab, listing every daily priority Aariz did not finish
 - [x] 6. **Important dates box** - a small box in the top right corner of the overview tab showing facts like the semester start date and the Claude Code token expiry date
 - [x] 7. **Strategy tab** - a second tab listing every task with its full progression
-- [ ] 8. **Completed tab** - a third tab holding the finished tasks so they leave the overview
+- [x] 8. **Completed tab** - a third tab holding the finished tasks so they leave the overview
 - [ ] 9. **Run it on Aariz's own server** - one documented command that builds the app and serves it locally, so it is never put on the public internet
