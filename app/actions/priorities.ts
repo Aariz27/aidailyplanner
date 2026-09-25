@@ -18,7 +18,7 @@ const MAX_PER_DAY = 3;
 const UNEXPECTED = "Could not save. Try again.";
 
 function refreshed(error: string): ActionResult {
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: false, error };
 }
 
@@ -72,7 +72,7 @@ export async function setDailyPriority(
   }
 
   if (problem) return refreshed(problem);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -116,7 +116,7 @@ export async function setDailyPriorityStatus(
   }
 
   if (!found) return refreshed(PRIORITY_GONE);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -136,6 +136,6 @@ export async function removeDailyPriority(
   }
 
   if (changed === 0) return refreshed(PRIORITY_GONE);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }

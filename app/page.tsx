@@ -38,7 +38,7 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-[1280px] p-12">
       <PageHeader active="overview" today={today} aside={<DatesBox dates={dates} />} />
-      <div className="grid grid-cols-[1fr_1.25fr_1fr] items-start gap-7">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_minmax(0,1fr)] items-start gap-7">
         <TaskDumpList
           tasks={tasks}
           stepsByTask={stepsByTask}

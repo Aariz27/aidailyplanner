@@ -2,8 +2,8 @@
 
 import { useId, useRef, useState } from "react";
 import { setDailyPriority } from "../../actions/priorities";
-import { createStep, deleteStep, updateStep } from "../../actions/steps";
-import { PILL } from "./pill";
+import { createStep, deleteStep, setStepDone, updateStep } from "../../actions/steps";
+import { PILL, priorityLabel } from "./pill";
 import TitleTextarea from "./TitleTextarea";
 import type { Step } from "../../types/db";
 import { STEP_GONE, TASK_GONE, type ActionResult } from "../../types/tasks";
@@ -84,7 +84,7 @@ export default function StepBox({
     <div className="ext-sm flex w-[200px] flex-col gap-2 p-3">
       <div className="flex items-center gap-2">
         <span
-          className={`h-3.5 w-3.5 shrink-0 rounded-full ${step?.done === 1 ? "bg-accent" : "circle-inset"}`}
+          className={`h-3.5 w-3.5 shrink-0 rounded-full ${step?.done === 1 ? "bg-done" : "circle-inset"}`}
           aria-hidden="true"
         />
         <label htmlFor={fieldId} className="text-[11px] text-muted">
@@ -122,7 +122,15 @@ export default function StepBox({
           <SetStepPriorityButton
             taskId={taskId}
             stepId={step.id}
-            disabled={todayFull || alreadyToday}
+            alreadyToday={alreadyToday}
+            todayFull={todayFull}
+            onSavingChange={onSavingChange}
+            onSaved={onSaved}
+            onGone={onGone}
+            onError={setError}
+          />
+          <MarkDoneButton
+            step={step}
             onSavingChange={onSavingChange}
             onSaved={onSaved}
             onGone={onGone}
@@ -138,7 +146,8 @@ export default function StepBox({
 type SetPriorityProps = {
   taskId: number;
   stepId: number;
-  disabled: boolean;
+  alreadyToday: boolean;
+  todayFull: boolean;
   onSavingChange: (saving: boolean) => void;
   onSaved: () => void;
   onGone: (result: ActionResult) => void;
@@ -148,7 +157,8 @@ type SetPriorityProps = {
 function SetStepPriorityButton({
   taskId,
   stepId,
-  disabled,
+  alreadyToday,
+  todayFull,
   onSavingChange,
   onSaved,
   onGone,
@@ -187,10 +197,62 @@ function SetStepPriorityButton({
     <button
       type="button"
       onClick={() => void set()}
-      disabled={pending || disabled}
+      disabled={pending || alreadyToday || todayFull}
       className={`${PILL} self-start`}
     >
-      Set as daily priority
+      {priorityLabel(alreadyToday, todayFull)}
+    </button>
+  );
+}
+
+type MarkDoneProps = {
+  step: Step;
+  onSavingChange: (saving: boolean) => void;
+  onSaved: () => void;
+  onGone: (result: ActionResult) => void;
+  onError: (error: string | null) => void;
+};
+
+function MarkDoneButton({ step, onSavingChange, onSaved, onGone, onError }: MarkDoneProps) {
+  const [pending, setPending] = useState(false);
+  const done = step.done === 1;
+
+  async function toggle() {
+    const formData = new FormData();
+    formData.set("id", String(step.id));
+    formData.set("done", done ? "0" : "1");
+    setPending(true);
+    onSavingChange(true);
+    let result: ActionResult;
+    try {
+      result = await setStepDone(null, formData);
+    } catch (caught) {
+      console.error("Marking a step done failed", caught);
+      result = { success: false, error: UNEXPECTED };
+    } finally {
+      setPending(false);
+      onSavingChange(false);
+    }
+
+    if (result.success) {
+      onError(null);
+      onSaved();
+    } else if (result.error === STEP_GONE || result.error === TASK_GONE) {
+      onGone(result);
+    } else {
+      onError(result.error);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void toggle()}
+      disabled={pending}
+      aria-pressed={done}
+      className={`${PILL} self-start ${done ? "text-done" : ""}`}
+    >
+      {done ? "Done" : "Mark as done"}
     </button>
   );
 }

@@ -68,13 +68,15 @@ export default function DatesBox({ dates }: { dates: DatedItem[] }) {
         ) : (
           <ul className="flex flex-col gap-3">
             {dates.map((date) => (
-              <li key={date.id} className="group relative flex items-baseline justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-[13px] font-semibold break-words">{date.label}</div>
-                  <div className="text-[11px] text-muted tabular-nums">{formatDueDate(date.on_date)}</div>
-                </div>
-                <div className={`min-w-[70px] shrink-0 text-right text-[11px] ${whenColour(date.days)}`}>
-                  {whenText(date.days)}
+              <li key={date.id} className="group flex flex-col gap-1.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-semibold break-words">{date.label}</div>
+                    <div className="text-[11px] text-muted tabular-nums">{formatDueDate(date.on_date)}</div>
+                  </div>
+                  <div className={`min-w-[70px] shrink-0 text-right text-[11px] ${whenColour(date.days)}`}>
+                    {whenText(date.days)}
+                  </div>
                 </div>
                 <DeleteDateButton date={date} onResult={handleResult} />
               </li>
@@ -189,8 +191,9 @@ function DeleteDateButton({ date, onResult }: { date: ImportantDate; onResult: (
       onKeyDown={(event) => {
         if (event.key === "Escape") setConfirming(false);
       }}
-      className={`absolute top-1/2 right-0 -translate-y-1/2 bg-bg transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100 ${
-        confirming ? "" : "pointer-events-none opacity-0"
+      // Always shown under the date, faint until the row is hovered or focused.
+      className={`flex transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 ${
+        confirming ? "" : "opacity-60"
       }`}
     >
       <input type="hidden" name="id" value={date.id} />

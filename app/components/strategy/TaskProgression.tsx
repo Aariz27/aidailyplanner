@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import { formatDueDate } from "../../lib/format";
 import type { Step, Task, TaskStatus } from "../../types/db";
 
@@ -8,7 +8,8 @@ const STATUS: Record<TaskStatus, { label: string; colour: string }> = {
   done: { label: "Done", colour: "text-done" },
 };
 
-export default function TaskProgression({ task, steps }: { task: Task; steps: Step[] }) {
+// `action` sits in the card's top right; the Strategy tab passes its "Add progressions" button.
+export default function TaskProgression({ task, steps, action }: { task: Task; steps: Step[]; action?: ReactNode }) {
   const done = steps.filter((step) => step.done === 1).length;
   const headingId = `strategy-task-${task.id}`;
 
@@ -27,6 +28,7 @@ export default function TaskProgression({ task, steps }: { task: Task; steps: St
         <span className={`shrink-0 text-xs font-semibold ${STATUS[task.status].colour}`}>
           {STATUS[task.status].label}
         </span>
+        {action}
       </div>
       {steps.length > 0 && (
         <ol className="flex flex-wrap items-center gap-y-4">
