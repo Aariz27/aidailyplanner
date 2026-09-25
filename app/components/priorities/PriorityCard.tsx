@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { removeDailyPriority, setDailyPriorityStatus } from "../../actions/priorities";
 import { formatDueDate } from "../../lib/format";
 import { PILL } from "../tasks/pill";
@@ -9,10 +9,11 @@ import type { ActionResult } from "../../types/tasks";
 
 const UNEXPECTED = "Could not save. Try again.";
 
+// bg-none! removes the dark theme's gradient surface, which otherwise paints over the fill colour.
 const STATUS_BUTTONS: { value: TaskStatus; label: string; fill: string; text: string }[] = [
-  { value: "open", label: "Open", fill: "bg-open text-bg", text: "text-open" },
-  { value: "started", label: "Started", fill: "bg-started text-bg", text: "text-started" },
-  { value: "done", label: "Done", fill: "bg-done text-bg", text: "text-done" },
+  { value: "open", label: "Open", fill: "bg-open bg-none! text-bg", text: "text-open" },
+  { value: "started", label: "Started", fill: "bg-started bg-none! text-bg", text: "text-started" },
+  { value: "done", label: "Done", fill: "bg-done bg-none! text-bg", text: "text-done" },
 ];
 
 type OnResult = (result: ActionResult) => void;
@@ -78,7 +79,7 @@ export default function PriorityCard({
             )}
           </svg>
         </div>
-        <RemoveMenu priorityId={priority.id} title={title} onResult={onResult} />
+        <RemoveButton priorityId={priority.id} title={title} onResult={onResult} />
       </div>
       <div>
         <div
@@ -114,7 +115,7 @@ export default function PriorityCard({
   );
 }
 
-function RemoveMenu({
+function RemoveButton({
   priorityId,
   title,
   onResult,
@@ -123,19 +124,7 @@ function RemoveMenu({
   title: string;
   onResult: OnResult;
 }) {
-  const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function closeOnOutsideClick(event: MouseEvent) {
-      if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", closeOnOutsideClick);
-    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
-  }, [open]);
 
   async function remove() {
     const formData = new FormData();
@@ -149,44 +138,19 @@ function RemoveMenu({
       result = { success: false, error: UNEXPECTED };
     }
     setPending(false);
-    setOpen(false);
     onResult(result);
   }
 
   return (
-    <div
-      ref={wrapperRef}
-      className="relative"
-      onKeyDown={(event) => {
-        if (event.key !== "Escape" || !open) return;
-        event.preventDefault();
-        setOpen(false);
-        buttonRef.current?.focus();
-      }}
+    <button
+      type="button"
+      disabled={pending}
+      onClick={() => void remove()}
+      aria-label={`Remove ${title} from today`}
+      className={PILL}
     >
-      <button
-        ref={buttonRef}
-        type="button"
-        aria-label={`More options for ${title}`}
-        aria-expanded={open}
-        onClick={(event) => {
-          // Safari does not focus a clicked button, and focus must come back here on Escape.
-          event.currentTarget.focus();
-          setOpen((current) => !current);
-        }}
-        className="flex h-6 w-8 items-center justify-center gap-1"
-      >
-        <span className="h-[3px] w-[3px] rounded-full bg-muted" aria-hidden="true" />
-        <span className="h-[3px] w-[3px] rounded-full bg-muted" aria-hidden="true" />
-      </button>
-      {open && (
-        <div className="ext-sm absolute top-7 right-0 z-10 p-2">
-          <button type="button" disabled={pending} onClick={() => void remove()} className={PILL}>
-            Remove from today
-          </button>
-        </div>
-      )}
-    </div>
+      Remove from today
+    </button>
   );
 }
 

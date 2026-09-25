@@ -10,7 +10,7 @@ const BAD_DUE_DATE = "Pick a valid due date.";
 const UNEXPECTED = "Could not save. Try again.";
 
 function taskGone(): ActionResult {
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: false, error: TASK_GONE };
 }
 
@@ -26,7 +26,7 @@ export async function createTask(_prev: ActionResult | null, formData: FormData)
     console.error("createTask failed", error);
     return { success: false, error: UNEXPECTED };
   }
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -48,7 +48,7 @@ export async function updateTask(_prev: ActionResult | null, formData: FormData)
     return { success: false, error: UNEXPECTED };
   }
   if (changed === 0) return taskGone();
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -64,6 +64,6 @@ export async function deleteTask(_prev: ActionResult | null, formData: FormData)
     return { success: false, error: UNEXPECTED };
   }
   if (changed === 0) return taskGone();
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }

@@ -10,7 +10,7 @@ const BAD_DATE = "Pick a valid date.";
 const UNEXPECTED = "Could not save. Try again.";
 
 function dateGone(): ActionResult {
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: false, error: DATE_GONE };
 }
 
@@ -31,7 +31,7 @@ export async function createImportantDate(
     console.error("createImportantDate failed", error);
     return { success: false, error: UNEXPECTED };
   }
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -50,6 +50,6 @@ export async function deleteImportantDate(
     return { success: false, error: UNEXPECTED };
   }
   if (changed === 0) return dateGone();
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }

@@ -9,7 +9,7 @@ const STEP_REQUIRED = "Type a step first.";
 const UNEXPECTED = "Could not save. Try again.";
 
 function gone(error: string): ActionResult {
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: false, error };
 }
 
@@ -35,7 +35,7 @@ export async function createStep(_prev: ActionResult | null, formData: FormData)
     return { success: false, error: UNEXPECTED };
   }
   if (!created) return gone(TASK_GONE);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -53,7 +53,7 @@ export async function updateStep(_prev: ActionResult | null, formData: FormData)
     return { success: false, error: UNEXPECTED };
   }
   if (changed === 0) return gone(STEP_GONE);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -82,6 +82,23 @@ export async function deleteStep(_prev: ActionResult | null, formData: FormData)
     return { success: false, error: UNEXPECTED };
   }
   if (!deleted) return gone(STEP_GONE);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+export async function setStepDone(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const id = parseId(formData, "id", STEP_GONE);
+  if (!id.ok) return gone(STEP_GONE);
+  const done = formData.get("done") === "1" ? 1 : 0;
+
+  let changed: number;
+  try {
+    changed = getDb().prepare("UPDATE steps SET done = ? WHERE id = ?").run(done, id.value).changes;
+  } catch (error) {
+    console.error("setStepDone failed", error);
+    return { success: false, error: UNEXPECTED };
+  }
+  if (changed === 0) return gone(STEP_GONE);
+  revalidatePath("/", "layout");
   return { success: true };
 }

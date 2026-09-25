@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { setDailyPriority } from "../../actions/priorities";
 import { formatDueDate } from "../../lib/format";
-import { PILL } from "../tasks/pill";
+import { PILL, priorityLabel } from "../tasks/pill";
 import type { StartedItem } from "../../types/db";
 import type { ActionResult } from "../../types/tasks";
 
@@ -81,22 +81,25 @@ function StartedRow({
       : `Whole task · ${chosen}`;
 
   return (
-    <li className="group ext-sm relative flex min-h-16 items-center gap-3.5 overflow-hidden px-3.5 py-3">
-      <div className="circle-inset flex h-[38px] w-[38px] shrink-0 items-center justify-center">
-        {isStep ? <FlowIcon /> : <ClockIcon className="h-3.5 w-3.5" />}
+    <li className="group ext-sm flex flex-col gap-2.5 px-3.5 py-3">
+      <div className="flex min-h-10 items-center gap-3.5">
+        <div className="circle-inset flex h-[38px] w-[38px] shrink-0 items-center justify-center">
+          {isStep ? <FlowIcon /> : <ClockIcon className="h-3.5 w-3.5" />}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[13px] font-semibold break-words">{title}</div>
+          <div className="mt-[3px] text-[11px] text-muted">{meta}</div>
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-[13px] font-semibold break-words">{title}</div>
-        <div className="mt-[3px] text-[11px] text-muted">{meta}</div>
-      </div>
+      {/* Always shown under the text, faint until the row is hovered or focused. */}
       <form
         action={formAction}
-        className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 bg-bg opacity-0 transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100"
+        className="flex opacity-60 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
       >
         <input type="hidden" name="task_id" value={item.task_id} />
         <input type="hidden" name="step_id" value={item.step_id ?? ""} />
         <button type="submit" disabled={pending || todayFull} className={PILL}>
-          Set as daily priority
+          {priorityLabel(false, todayFull)}
         </button>
       </form>
     </li>

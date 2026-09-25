@@ -105,9 +105,10 @@ export default function ProgressionsDialog({
         // Only a click on the dimmed backdrop lands on the dialog element itself.
         if (event.target === event.currentTarget) close();
       }}
-      className="m-auto w-[min(760px,calc(100vw-32px))] max-w-none bg-transparent p-0 text-text backdrop:bg-black/40"
+      className="m-auto h-[calc(100dvh-80px)] max-h-none w-[calc(100vw-80px)] max-w-none bg-transparent p-0 text-text backdrop:bg-black/40"
     >
-      <div className="ext-lg flex flex-col gap-5 p-6">
+      {/* The window fills the screen with a 40px gap on every side and scrolls inside if the steps overflow. */}
+      <div className="ext-lg flex h-full flex-col gap-5 overflow-y-auto p-6">
         <div className="flex items-start gap-4">
           <div className="min-w-0 flex-1">
             <p className="text-xs text-muted">Progressions</p>

@@ -75,27 +75,6 @@ export default function TodayGauge({ priorities }: { priorities: TodayPriority[]
           <div className="mt-1 text-xs text-muted">of 3 today</div>
         </div>
       </div>
-
-      <ul className="mt-2 flex flex-col gap-1.5">
-        {priorities.map((priority) => (
-          <li key={priority.id} className="flex items-center gap-2 text-xs text-muted">
-            <span
-              className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                priority.status === "open"
-                  ? "bg-open"
-                  : priority.status === "started"
-                    ? "bg-started"
-                    : "bg-done"
-              }`}
-              aria-hidden="true"
-            />
-            <span className="min-w-0 truncate">
-              {priority.step_id === null ? priority.task_title : priority.step_title}
-            </span>
-            <span className="ml-auto shrink-0 capitalize">{priority.status}</span>
-          </li>
-        ))}
-      </ul>
     </section>
   );
 }

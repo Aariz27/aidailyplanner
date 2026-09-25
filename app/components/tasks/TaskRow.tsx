@@ -4,7 +4,7 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { setDailyPriority } from "../../actions/priorities";
 import { deleteTask, updateTask } from "../../actions/tasks";
 import { formatDueDate } from "../../lib/format";
-import { PILL } from "./pill";
+import { PILL, priorityLabel } from "./pill";
 import ProgressionsDialog from "./ProgressionsDialog";
 import TitleTextarea from "./TitleTextarea";
 import type { Step, Task, TaskStatus } from "../../types/db";
@@ -18,6 +18,10 @@ const STATUS_OUTLINE: Record<TaskStatus, string> = {
   started: "border-started",
   done: "border-done",
 };
+
+const ICON_BUTTON = "ext-sm flex h-[30px] w-[30px] items-center justify-center rounded-xl active:pressed";
+const ICON = "h-3.5 w-3.5 fill-none stroke-text";
+const SMALL_PILL = "ext-sm rounded-xl px-2.5 py-2 text-[10px] font-semibold whitespace-nowrap active:pressed";
 
 const MINI_MAX_BOXES = 4;
 const MINI_MAX_ARROWS = 3;
@@ -102,6 +106,7 @@ export default function TaskRow({
   onResult: OnResult;
 }) {
   const [editing, setEditing] = useState(false);
+  const [progressionsOpen, setProgressionsOpen] = useState(false);
   const editButtonRef = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef(false);
 
@@ -117,69 +122,101 @@ export default function TaskRow({
     setEditing(false);
   }
 
-  if (editing)
-    return (
-      <EditTaskForm
-        task={task}
-        steps={steps}
-        todayStepIds={todayStepIds}
-        todayFull={todayFull}
-        onClose={closeEditor}
-        onResult={onResult}
-      />
-    );
+  if (editing) return <EditTaskForm task={task} onClose={closeEditor} onResult={onResult} />;
 
   return (
     <li
-      className={`group ext-sm relative flex min-h-16 items-center gap-3.5 overflow-hidden border px-3.5 py-3 ${
+      className={`group ext-sm flex flex-col gap-2.5 border px-3.5 py-3 ${
         hasPriority ? STATUS_OUTLINE[task.status] : "border-transparent"
       }`}
     >
-      <div className="circle-inset flex h-[38px] w-[38px] shrink-0 items-center justify-center">
-        <svg
-          viewBox="0 0 24 24"
-          className="h-3.5 w-3.5 fill-none stroke-text"
-          strokeWidth={1.5}
-          strokeLinecap="round"
-          aria-hidden="true"
-        >
-          <rect x="4" y="4" width="16" height="16" rx="2" />
-          <path d="M8 9h8M8 13h5" />
-        </svg>
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-[13px] font-semibold break-words">{task.title}</div>
-        <div className="mt-[3px] flex items-start gap-3 text-[11px] text-muted">
-          {steps.length > 0 && <MiniProgression steps={steps} />}
-          {/* 114px lines the date up with the add form's date field: its 118px width plus the
-              form's 10px right padding, minus this row's 14px right padding. */}
-          <span className="ml-auto w-[114px] shrink-0 tabular-nums">
-            {task.due_date ? formatDueDate(task.due_date) : "dd.mm.yyyy"}
-          </span>
+      <div className="flex min-h-10 items-center gap-3.5">
+        <div className="circle-inset flex h-[38px] w-[38px] shrink-0 items-center justify-center">
+          <svg
+            viewBox="0 0 24 24"
+            className="h-3.5 w-3.5 fill-none stroke-text"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+            <path d="M8 9h8M8 13h5" />
+          </svg>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[13px] font-semibold break-words">{task.title}</div>
+          <div className="mt-[3px] flex items-start gap-3 text-[11px] text-muted">
+            {steps.length > 0 && <MiniProgression steps={steps} />}
+            {/* 114px lines the date up with the add form's date field: its 118px width plus the
+                form's 10px right padding, minus this row's 14px right padding. */}
+            <span className="ml-auto w-[114px] shrink-0 tabular-nums">
+              {task.due_date ? formatDueDate(task.due_date) : "dd.mm.yyyy"}
+            </span>
+          </div>
         </div>
       </div>
-      <div className="pointer-events-none absolute top-1/2 right-3.5 flex -translate-y-1/2 gap-2 bg-bg opacity-0 transition-opacity group-has-[:focus-visible]:pointer-events-auto group-has-[:focus-visible]:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100">
+      {/* One line, faint until the row is hovered or focused: the pencil sits under the circle
+          icon (ml-1 centres its 30px under the 38px circle) and the trash can in the right corner.
+          The two pills are a size smaller than elsewhere so all four fit in the column, and the
+          four buttons are spread so the three gaps between them are equal. */}
+      <div className="flex flex-wrap items-center justify-between gap-1.5 opacity-60 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+        <button
+          ref={editButtonRef}
+          type="button"
+          onClick={() => setEditing(true)}
+          aria-label={`Edit ${task.title}`}
+          title="Edit"
+          className={`${ICON_BUTTON} ml-1`}
+        >
+          <svg viewBox="0 0 24 24" className={ICON} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M16.5 4.5l3 3L8 19H5v-3L16.5 4.5z" />
+          </svg>
+        </button>
         <SetPriorityButton
           taskId={task.id}
-          disabled={todayFull || alreadyToday}
+          alreadyToday={alreadyToday}
+          todayFull={todayFull}
           onResult={onResult}
         />
-        <button ref={editButtonRef} type="button" onClick={() => setEditing(true)} className={PILL}>
-          Edit
+        <button
+          type="button"
+          onClick={(event) => {
+            // Safari does not focus a clicked button, and the pop-up returns focus to whatever had it.
+            event.currentTarget.focus();
+            setProgressionsOpen(true);
+          }}
+          className={SMALL_PILL}
+        >
+          Progressions
         </button>
-        <DeleteTaskButton taskId={task.id} onResult={onResult} />
+        {/* mr-1 mirrors the pencil's ml-1, so both ends sit the same distance from the edge. */}
+        <div className="mr-1 flex">
+          <DeleteTaskButton taskId={task.id} title={task.title} onResult={onResult} />
+        </div>
       </div>
+      {progressionsOpen && (
+        <ProgressionsDialog
+          task={task}
+          steps={steps}
+          todayStepIds={todayStepIds}
+          todayFull={todayFull}
+          onClose={() => setProgressionsOpen(false)}
+          onResult={onResult}
+        />
+      )}
     </li>
   );
 }
 
 function SetPriorityButton({
   taskId,
-  disabled,
+  alreadyToday,
+  todayFull,
   onResult,
 }: {
   taskId: number;
-  disabled: boolean;
+  alreadyToday: boolean;
+  todayFull: boolean;
   onResult: OnResult;
 }) {
   const [, formAction, pending] = useActionState(
@@ -194,8 +231,9 @@ function SetPriorityButton({
   return (
     <form action={formAction}>
       <input type="hidden" name="task_id" value={taskId} />
-      <button type="submit" disabled={pending || disabled} className={PILL}>
-        Set as daily priority
+      <button type="submit" disabled={pending || alreadyToday || todayFull} className={SMALL_PILL}>
+        {/* Short words so all four buttons fit on one line in a narrow window. */}
+        {priorityLabel(alreadyToday, todayFull, "Daily priority")}
       </button>
     </form>
   );
@@ -203,20 +241,13 @@ function SetPriorityButton({
 
 function EditTaskForm({
   task,
-  steps,
-  todayStepIds,
-  todayFull,
   onClose,
   onResult,
 }: {
   task: Task;
-  steps: Step[];
-  todayStepIds: number[];
-  todayFull: boolean;
   onClose: () => void;
   onResult: OnResult;
 }) {
-  const [progressionsOpen, setProgressionsOpen] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [dueDate, setDueDate] = useState(task.due_date ?? "");
   const titleId = useId();
@@ -240,8 +271,7 @@ function EditTaskForm({
       <form
         action={formAction}
         onKeyDown={(event) => {
-          // While the progressions pop-up is open, Escape belongs to the pop-up.
-          if (event.key === "Escape" && !progressionsOpen) onClose();
+          if (event.key === "Escape") onClose();
         }}
         className="flex flex-col gap-2"
       >
@@ -273,17 +303,6 @@ function EditTaskForm({
             className="inset-sm px-3 py-1.5 text-[11px] text-text outline-none"
           />
           <div className="ml-auto flex gap-2">
-            <button
-              type="button"
-              onClick={(event) => {
-                // Safari does not focus a clicked button, and the pop-up returns focus to whatever had it.
-                event.currentTarget.focus();
-                setProgressionsOpen(true);
-              }}
-              className={PILL}
-            >
-              Add progressions
-            </button>
             <button type="button" onClick={onClose} className={PILL}>
               Cancel
             </button>
@@ -298,21 +317,11 @@ function EditTaskForm({
           </p>
         )}
       </form>
-      {progressionsOpen && (
-        <ProgressionsDialog
-          task={task}
-          steps={steps}
-          todayStepIds={todayStepIds}
-          todayFull={todayFull}
-          onClose={() => setProgressionsOpen(false)}
-          onResult={onResult}
-        />
-      )}
     </li>
   );
 }
 
-function DeleteTaskButton({ taskId, onResult }: { taskId: number; onResult: OnResult }) {
+function DeleteTaskButton({ taskId, title, onResult }: { taskId: number; title: string; onResult: OnResult }) {
   const [confirming, setConfirming] = useState(false);
   const [, formAction, pending] = useActionState(
     async (prev: ActionResult | null, formData: FormData) => {
@@ -340,9 +349,18 @@ function DeleteTaskButton({ taskId, onResult }: { taskId: number; onResult: OnRe
         type={confirming ? "submit" : "button"}
         onClick={confirming ? undefined : () => setConfirming(true)}
         disabled={pending}
-        className={PILL}
+        aria-label={confirming ? `Confirm delete ${title}` : `Delete ${title}`}
+        title={confirming ? undefined : "Delete"}
+        className={confirming ? PILL : ICON_BUTTON}
       >
-        {confirming ? "Confirm delete" : "Delete"}
+        {/* The second click keeps its words, so a delete is never one stray click. */}
+        {confirming ? (
+          "Confirm delete"
+        ) : (
+          <svg viewBox="0 0 24 24" className={ICON} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3" />
+          </svg>
+        )}
       </button>
     </form>
   );
