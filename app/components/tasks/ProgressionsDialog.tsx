@@ -20,7 +20,7 @@ type Props = {
 
 export default function ProgressionsDialog({
   task,
-  steps,
+  steps: allSteps,
   todayStepIds,
   todayFull,
   onClose,
@@ -28,6 +28,8 @@ export default function ProgressionsDialog({
 }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const headingId = useId();
+  // The chart's boxes are the top-level steps; each box lists its own sub-progressions.
+  const steps = allSteps.filter((step) => step.parent_id === null);
   // Every empty box, keyed by a local counter so a box keeps its typed text when another box saves.
   // The first keys fill the chart up to two boxes; the counter starts past them.
   const nextDraftKey = useRef(MIN_BOXES);
@@ -137,6 +139,8 @@ export default function ProgressionsDialog({
                   taskId={task.id}
                   number={index + 1}
                   step={box.step}
+                  subSteps={box.step ? allSteps.filter((step) => step.parent_id === box.step?.id) : []}
+                  todayStepIds={todayStepIds}
                   alreadyToday={box.step !== null && todayStepIds.includes(box.step.id)}
                   todayFull={todayFull}
                   autoFocus={box.draftKey !== null && box.draftKey === focusDraft}

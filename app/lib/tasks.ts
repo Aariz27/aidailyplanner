@@ -12,7 +12,7 @@ export function listDumpTasks(): Task[] {
 export function listStepsForDumpTasks(): Step[] {
   return getDb()
     .prepare(
-      "SELECT s.id, s.task_id, s.position, s.title, s.done FROM steps s JOIN tasks t ON t.id = s.task_id WHERE t.status != 'done' ORDER BY s.task_id, s.position",
+      "SELECT s.id, s.task_id, s.position, s.title, s.done, s.parent_id FROM steps s JOIN tasks t ON t.id = s.task_id WHERE t.status != 'done' ORDER BY s.task_id, s.position",
     )
     .all() as Step[];
 }
@@ -26,7 +26,7 @@ export function listAllTasks(): Task[] {
 
 export function listAllSteps(): Step[] {
   return getDb()
-    .prepare("SELECT id, task_id, position, title, done FROM steps ORDER BY task_id, position")
+    .prepare("SELECT id, task_id, position, title, done, parent_id FROM steps ORDER BY task_id, position")
     .all() as Step[];
 }
 
@@ -46,7 +46,7 @@ export function listDoneTasks(): Task[] {
 export function listStepsForDoneTasks(): Step[] {
   return getDb()
     .prepare(
-      "SELECT s.id, s.task_id, s.position, s.title, s.done FROM steps s JOIN tasks t ON t.id = s.task_id WHERE t.status = 'done' ORDER BY s.task_id, s.position",
+      "SELECT s.id, s.task_id, s.position, s.title, s.done, s.parent_id FROM steps s JOIN tasks t ON t.id = s.task_id WHERE t.status = 'done' ORDER BY s.task_id, s.position",
     )
     .all() as Step[];
 }

@@ -14,7 +14,7 @@ export function listTodayPriorities(today: string): TodayPriority[] {
     .prepare(
       `SELECT p.id, p.priority_date, p.task_id, p.step_id, p.done, p.status,
               t.title AS task_title, t.due_date AS task_due_date,
-              s.title AS step_title, s.position AS step_position
+              s.title AS step_title, s.position AS step_position, s.parent_id AS step_parent_id
        FROM daily_priorities p
        JOIN tasks t ON t.id = p.task_id
        LEFT JOIN steps s ON s.id = p.step_id
@@ -37,7 +37,7 @@ export function listTaskIdsWithPriorities(): number[] {
 export function listStepsForTodayPriorities(today: string): Step[] {
   return getDb()
     .prepare(
-      `SELECT s.id, s.task_id, s.position, s.title, s.done
+      `SELECT s.id, s.task_id, s.position, s.title, s.done, s.parent_id
        FROM steps s
        WHERE s.task_id IN (
          SELECT task_id FROM daily_priorities WHERE priority_date = ? AND step_id IS NOT NULL
@@ -56,11 +56,13 @@ export function listStartedNotCompleted(today: string): StartedItem[] {
     .prepare(
       `SELECT p.task_id, p.step_id, MAX(p.priority_date) AS chosen_date,
               t.title AS task_title, t.due_date AS task_due_date,
-              s.title AS step_title, s.position AS step_position,
-              (SELECT COUNT(*) FROM steps c WHERE c.task_id = p.task_id) AS step_count
+              s.title AS step_title, s.position AS step_position, ps.title AS parent_title,
+              -- Siblings only: top-level steps for a step, the parent's sub-progressions for a sub.
+              (SELECT COUNT(*) FROM steps c WHERE c.task_id = p.task_id AND c.parent_id IS s.parent_id) AS step_count
        FROM daily_priorities p
        JOIN tasks t ON t.id = p.task_id
        LEFT JOIN steps s ON s.id = p.step_id
+       LEFT JOIN steps ps ON ps.id = s.parent_id
        WHERE p.priority_date < ?
          AND ((p.step_id IS NULL AND t.status = 'started')
               OR (p.step_id IS NOT NULL AND p.status = 'started' AND s.done = 0))

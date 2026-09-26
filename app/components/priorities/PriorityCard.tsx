@@ -30,8 +30,14 @@ export default function PriorityCard({
   const [pending, setPending] = useState(false);
   const isStep = priority.step_id !== null;
   const title = isStep ? (priority.step_title ?? "") : priority.task_title;
+  // A sub-progression counts among its siblings and names its parent step.
+  const parentId = priority.step_parent_id;
+  const siblings = steps.filter((step) => step.parent_id === parentId);
+  const parentTitle = parentId === null ? null : steps.find((step) => step.id === parentId)?.title;
   const meta = isStep
-    ? `Step ${priority.step_position} of ${steps.length} · ${priority.task_title}`
+    ? parentId === null
+      ? `Step ${priority.step_position} of ${siblings.length} · ${priority.task_title}`
+      : `Sub-step ${priority.step_position} of ${siblings.length} · ${parentTitle} · ${priority.task_title}`
     : priority.task_due_date
       ? `Whole task · due ${formatDueDate(priority.task_due_date)}`
       : "Whole task";
@@ -90,7 +96,7 @@ export default function PriorityCard({
           {title}
         </div>
         <div className="mt-1 text-xs text-muted">{meta}</div>
-        {isStep && <StepFlow steps={steps} />}
+        {isStep && <StepFlow steps={siblings} />}
       </div>
       <div role="group" aria-label={`Status of ${title}`} className="flex gap-2">
         {STATUS_BUTTONS.map((button) => {

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getDb } from "../lib/db";
+import { parentOf, syncParentDone } from "../lib/steps";
 import { todayDate } from "../lib/priorities";
 import { parseId } from "../lib/form";
 import type { TaskStatus } from "../types/db";
@@ -107,6 +108,7 @@ export async function setDailyPriorityStatus(
       } else {
         // A step card never changes its task's status; it only ticks the step itself.
         db.prepare("UPDATE steps SET done = ? WHERE id = ?").run(done, row.step_id);
+        syncParentDone(db, parentOf(db, row.step_id));
       }
       return true;
     })();

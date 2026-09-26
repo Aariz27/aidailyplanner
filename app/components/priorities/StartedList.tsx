@@ -75,7 +75,9 @@ function StartedRow({
   const title = isStep ? (item.step_title ?? "") : item.task_title;
   const chosen = `chosen ${formatDueDate(item.chosen_date)}`;
   const meta = isStep
-    ? `Step ${item.step_position} of ${item.step_count} · ${item.task_title} · ${chosen}`
+    ? item.parent_title === null
+      ? `Step ${item.step_position} of ${item.step_count} · ${item.task_title} · ${chosen}`
+      : `Sub-step ${item.step_position} of ${item.step_count} · ${item.parent_title} · ${item.task_title} · ${chosen}`
     : item.task_due_date
       ? `Whole task · ${chosen} · due ${formatDueDate(item.task_due_date)}`
       : `Whole task · ${chosen}`;

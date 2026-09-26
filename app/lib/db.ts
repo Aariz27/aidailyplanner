@@ -60,6 +60,7 @@ export function getDb(): Database.Database {
   conn.pragma("journal_mode = WAL");
   conn.exec(SCHEMA);
   addPriorityStatus(conn);
+  addStepParent(conn);
   db = conn;
   return db;
 }
@@ -76,4 +77,14 @@ function addPriorityStatus(conn: Database.Database): void {
     );
     conn.exec("UPDATE daily_priorities SET status = 'done' WHERE done = 1");
   })();
+}
+
+// Sub-progressions are steps whose parent_id points at the step they break down. Top-level
+// steps keep parent_id NULL, so the steps saved before sub-progressions stay as they are.
+function addStepParent(conn: Database.Database): void {
+  const columns = conn.prepare("PRAGMA table_info(steps)").all() as { name: string }[];
+  if (!columns.some((column) => column.name === "parent_id")) {
+    conn.exec("ALTER TABLE steps ADD COLUMN parent_id INTEGER REFERENCES steps(id) ON DELETE CASCADE");
+  }
+  conn.exec("CREATE INDEX IF NOT EXISTS steps_parent_id ON steps(parent_id)");
 }

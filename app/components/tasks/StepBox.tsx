@@ -4,6 +4,7 @@ import { useId, useRef, useState } from "react";
 import { setDailyPriority } from "../../actions/priorities";
 import { createStep, deleteStep, setStepDone, updateStep } from "../../actions/steps";
 import { PILL, priorityLabel } from "./pill";
+import SubStepList from "./SubStepList";
 import TitleTextarea from "./TitleTextarea";
 import type { Step } from "../../types/db";
 import { STEP_GONE, TASK_GONE, type ActionResult } from "../../types/tasks";
@@ -14,6 +15,8 @@ type Props = {
   taskId: number;
   number: number;
   step: Step | null;
+  subSteps: Step[];
+  todayStepIds: number[];
   alreadyToday: boolean;
   todayFull: boolean;
   autoFocus: boolean;
@@ -27,6 +30,8 @@ export default function StepBox({
   taskId,
   number,
   step,
+  subSteps,
+  todayStepIds,
   alreadyToday,
   todayFull,
   autoFocus,
@@ -42,6 +47,17 @@ export default function StepBox({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fieldId = useId();
   const errorId = useId();
+  // Empty sub-step fields, keyed by a local counter like the pop-up's own drafts.
+  const nextSubKey = useRef(0);
+  const [subDrafts, setSubDrafts] = useState<number[]>([]);
+  const [focusSub, setFocusSub] = useState<number | null>(null);
+  const showSubs = subSteps.length > 0 || subDrafts.length > 0;
+
+  function addSubDraft() {
+    const key = nextSubKey.current++;
+    setSubDrafts((current) => [...current, key]);
+    setFocusSub(key);
+  }
 
   async function save() {
     const trimmed = text.trim();
@@ -81,7 +97,8 @@ export default function StepBox({
   }
 
   return (
-    <div className="ext-sm flex w-[200px] flex-col gap-2 p-3">
+    // The card widens to hold the sub-step checklist.
+    <div className={`ext-sm flex flex-col gap-2 p-3 transition-[width] motion-reduce:transition-none ${showSubs ? "w-[280px]" : "w-[200px]"}`}>
       <div className="flex items-center gap-2">
         <span
           className={`h-3.5 w-3.5 shrink-0 rounded-full ${step?.done === 1 ? "bg-done" : "circle-inset"}`}
@@ -117,6 +134,22 @@ export default function StepBox({
           {error}
         </p>
       )}
+      {step && showSubs && (
+        <SubStepList
+          taskId={taskId}
+          parent={step}
+          subs={subSteps}
+          drafts={subDrafts}
+          focusDraft={focusSub}
+          todayStepIds={todayStepIds}
+          todayFull={todayFull}
+          onAddDraft={addSubDraft}
+          onDraftDone={(key) => setSubDrafts((current) => current.filter((draft) => draft !== key))}
+          onSavingChange={onSavingChange}
+          onSaved={onSaved}
+          onGone={onGone}
+        />
+      )}
       {step && (
         <div className="flex flex-wrap gap-2">
           <SetStepPriorityButton
@@ -131,11 +164,18 @@ export default function StepBox({
           />
           <MarkDoneButton
             step={step}
+            followsSubs={subSteps.length > 0}
             onSavingChange={onSavingChange}
             onSaved={onSaved}
             onGone={onGone}
             onError={setError}
           />
+          {/* Once the checklist shows, its own "+ Add sub-step" takes over from this pill. */}
+          {!showSubs && (
+            <button type="button" onClick={addSubDraft} className={`${PILL} self-start`}>
+              Add sub-progressions
+            </button>
+          )}
           <DeleteStepButton stepId={step.id} onDeleted={onDeleted} onGone={onGone} onError={setError} />
         </div>
       )}
@@ -207,13 +247,15 @@ function SetStepPriorityButton({
 
 type MarkDoneProps = {
   step: Step;
+  // A step with sub-steps is done when all of them are, so its own button is locked.
+  followsSubs: boolean;
   onSavingChange: (saving: boolean) => void;
   onSaved: () => void;
   onGone: (result: ActionResult) => void;
   onError: (error: string | null) => void;
 };
 
-function MarkDoneButton({ step, onSavingChange, onSaved, onGone, onError }: MarkDoneProps) {
+function MarkDoneButton({ step, followsSubs, onSavingChange, onSaved, onGone, onError }: MarkDoneProps) {
   const [pending, setPending] = useState(false);
   const done = step.done === 1;
 
@@ -248,7 +290,8 @@ function MarkDoneButton({ step, onSavingChange, onSaved, onGone, onError }: Mark
     <button
       type="button"
       onClick={() => void toggle()}
-      disabled={pending}
+      disabled={pending || followsSubs}
+      title={followsSubs ? "Follows its sub-steps" : undefined}
       aria-pressed={done}
       className={`${PILL} self-start ${done ? "text-done" : ""}`}
     >

@@ -14,6 +14,8 @@ export interface Step {
   position: number;
   title: string;
   done: 0 | 1;
+  // The step this sub-progression belongs to; null for a top-level step.
+  parent_id: number | null;
 }
 
 export interface DailyPriority {
@@ -31,6 +33,7 @@ export interface TodayPriority extends DailyPriority {
   task_due_date: string | null;
   step_title: string | null;
   step_position: number | null;
+  step_parent_id: number | null;
 }
 
 export interface ImportantDate {
@@ -48,5 +51,7 @@ export interface StartedItem {
   task_due_date: string | null;
   step_title: string | null;
   step_position: number | null;
+  // For a sub-progression: its parent step's title, and step_count counts its siblings.
+  parent_title: string | null;
   step_count: number;
 }

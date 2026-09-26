@@ -107,6 +107,8 @@ export default function TaskRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [progressionsOpen, setProgressionsOpen] = useState(false);
+  // The small chart shows top-level steps only; sub-progressions live inside the pop-up.
+  const topSteps = steps.filter((step) => step.parent_id === null);
   const editButtonRef = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef(false);
 
@@ -146,7 +148,7 @@ export default function TaskRow({
         <div className="min-w-0 flex-1">
           <div className="text-[13px] font-semibold break-words">{task.title}</div>
           <div className="mt-[3px] flex items-start gap-3 text-[11px] text-muted">
-            {steps.length > 0 && <MiniProgression steps={steps} />}
+            {topSteps.length > 0 && <MiniProgression steps={topSteps} />}
             {/* 114px lines the date up with the add form's date field: its 118px width plus the
                 form's 10px right padding, minus this row's 14px right padding. */}
             <span className="ml-auto w-[114px] shrink-0 tabular-nums">
