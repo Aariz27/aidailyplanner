@@ -124,3 +124,39 @@ export async function setStepDone(_prev: ActionResult | null, formData: FormData
   revalidatePath("/", "layout");
   return { success: true };
 }
+
+const ORDER_CHANGED = "The steps changed while you were moving one. Try again.";
+
+// Saves a new order for one list of siblings: a task's top-level steps, or one step's
+// sub-steps. `ids` must be exactly that list, so a stale drag never drops or adds a step.
+export async function reorderSteps(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const taskId = parseId(formData, "task_id", TASK_GONE);
+  if (!taskId.ok) return gone(TASK_GONE);
+  const rawParent = formData.get("parent_id");
+  const parent = typeof rawParent === "string" && rawParent !== "" ? parseId(formData, "parent_id", STEP_GONE) : null;
+  if (parent && !parent.ok) return gone(STEP_GONE);
+  const parentId = parent?.ok ? parent.value : null;
+  const rawIds = formData.get("ids");
+  const ids = typeof rawIds === "string" && /^\d+(,\d+)*$/.test(rawIds) ? rawIds.split(",").map(Number) : [];
+  if (ids.length === 0 || new Set(ids).size !== ids.length) return gone(ORDER_CHANGED);
+
+  let matched: boolean;
+  try {
+    const db = getDb();
+    matched = db.transaction(() => {
+      const siblings = db
+        .prepare("SELECT id FROM steps WHERE task_id = ? AND parent_id IS ?")
+        .all(taskId.value, parentId) as { id: number }[];
+      if (siblings.length !== ids.length || siblings.some((row) => !ids.includes(row.id))) return false;
+      const setPosition = db.prepare("UPDATE steps SET position = ? WHERE id = ?");
+      ids.forEach((id, index) => setPosition.run(index + 1, id));
+      return true;
+    })();
+  } catch (error) {
+    console.error("reorderSteps failed", error);
+    return { success: false, error: UNEXPECTED };
+  }
+  if (!matched) return gone(ORDER_CHANGED);
+  revalidatePath("/", "layout");
+  return { success: true };
+}

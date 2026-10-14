@@ -1,3 +1,4 @@
+import { applyRecurrence } from "../lib/recurrence";
 import PageHeader from "../components/layout/PageHeader";
 import TaskProgression from "../components/strategy/TaskProgression";
 import AddProgressionsButton from "../components/strategy/AddProgressionsButton";
@@ -8,6 +9,8 @@ import type { Step } from "../types/db";
 export const dynamic = "force-dynamic";
 
 export default function StrategyPage() {
+  // Reopen recurring tasks due today and add them to today, before reading anything.
+  applyRecurrence();
   const today = todayDate();
   const tasks = listAllTasks();
   const priorities = listTodayPriorities(today);

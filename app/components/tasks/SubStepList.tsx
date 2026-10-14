@@ -2,9 +2,10 @@
 
 import { useRef, useState } from "react";
 import { setDailyPriority } from "../../actions/priorities";
-import { createStep, deleteStep, setStepDone, updateStep } from "../../actions/steps";
+import { createStep, deleteStep, reorderSteps, setStepDone, updateStep } from "../../actions/steps";
 import { priorityLabel } from "./pill";
 import TitleTextarea from "./TitleTextarea";
+import { useReorder } from "./useReorder";
 import type { Step } from "../../types/db";
 import { STEP_GONE, TASK_GONE, type ActionResult } from "../../types/tasks";
 
@@ -66,14 +67,30 @@ export default function SubStepList({
   ...callbacks
 }: Props) {
   const done = subs.filter((sub) => sub.done === 1).length;
+  // Sub-steps are dragged by their three-line handle.
+  const { order, draggingId, itemProps } = useReorder(
+    subs.map((sub) => sub.id),
+    "y",
+    async (ids) => {
+      const result = await run(
+        reorderSteps,
+        { task_id: String(taskId), parent_id: String(parent.id), ids: ids.join(",") },
+        callbacks,
+      );
+      return result.success;
+    },
+  );
+  const orderedSubs = order.flatMap((id) => subs.filter((sub) => sub.id === id));
 
   return (
     <div className="flex flex-col gap-2">
       <ol aria-label={`Sub-steps of ${parent.title}`} className="flex flex-col gap-0.5">
-        {subs.map((sub) => (
+        {orderedSubs.map((sub) => (
           <SubRow
             key={sub.id}
             sub={sub}
+            dragProps={itemProps(sub.id)}
+            dragging={sub.id === draggingId}
             alreadyToday={todayStepIds.includes(sub.id)}
             todayFull={todayFull}
             taskId={taskId}
@@ -146,11 +163,20 @@ function TickButton({ done, label, onClick, disabled }: { done: boolean; label: 
 
 function SubRow({
   sub,
+  dragProps,
+  dragging,
   alreadyToday,
   todayFull,
   taskId,
   ...callbacks
-}: Callbacks & { sub: Step; alreadyToday: boolean; todayFull: boolean; taskId: number }) {
+}: Callbacks & {
+  sub: Step;
+  dragProps: ReturnType<ReturnType<typeof useReorder>["itemProps"]>;
+  dragging: boolean;
+  alreadyToday: boolean;
+  todayFull: boolean;
+  taskId: number;
+}) {
   const [text, setText] = useState(sub.title);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -175,8 +201,28 @@ function SubRow({
   }
 
   return (
-    <li className="group/sub flex flex-col rounded-lg px-0.5 py-1 transition-colors hover:bg-text/5">
-      <div className="flex items-start gap-2">
+    <li
+      {...dragProps}
+      onPointerDown={(event) => {
+        // Only the handle starts a drag, so the text and buttons keep working normally.
+        const target = event.target as HTMLElement;
+        event.currentTarget.draggable = target.closest("[data-drag-handle]") !== null;
+      }}
+      className={`group/sub flex flex-col rounded-lg px-0.5 py-1 transition-colors hover:bg-text/5 ${
+        dragging ? "opacity-40" : ""
+      }`}
+    >
+      <div className="flex items-start gap-1.5">
+        <span
+          data-drag-handle
+          title="Drag to reorder"
+          className="-ml-0.5 flex h-[21px] w-3.5 shrink-0 cursor-grab items-center justify-center text-muted opacity-50 transition-opacity group-hover/sub:opacity-100 active:cursor-grabbing"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 12 12" className="h-3 w-3 fill-none stroke-current" strokeWidth={1.4} strokeLinecap="round">
+            <path d="M2 3.5h8M2 6h8M2 8.5h8" />
+          </svg>
+        </span>
         <TickButton
           done={done}
           label={done ? `Mark ${sub.title} as not done` : `Mark ${sub.title} as done`}
@@ -271,7 +317,7 @@ function SubRow({
         </div>
       </div>
       {error && (
-        <p role="alert" className="pl-[23px] text-[11px] text-warn">
+        <p role="alert" className="pl-[41px] text-[11px] text-warn">
           {error}
         </p>
       )}
@@ -309,7 +355,8 @@ function DraftRow({
 
   return (
     <li className="flex flex-col px-0.5 py-1">
-      <div className="flex items-start gap-2">
+      {/* pl-[18px] lines the dashed circle up with the tick circles, which sit after a drag handle. */}
+      <div className="flex items-start gap-2 pl-[18px]">
         <span
           className="mt-[3px] h-[15px] w-[15px] shrink-0 rounded-full border-[1.5px] border-dashed border-track"
           aria-hidden="true"
@@ -336,7 +383,7 @@ function DraftRow({
         </form>
       </div>
       {error && (
-        <p role="alert" className="pl-[23px] text-[11px] text-warn">
+        <p role="alert" className="pl-[41px] text-[11px] text-warn">
           {error}
         </p>
       )}

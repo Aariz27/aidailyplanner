@@ -99,7 +99,12 @@ export default function StepBox({
   return (
     // The card widens to hold the sub-step checklist.
     <div className={`ext-sm flex flex-col gap-2 p-3 transition-[width] motion-reduce:transition-none ${showSubs ? "w-[280px]" : "w-[200px]"}`}>
-      <div className="flex items-center gap-2">
+      {/* The drag handle for a saved card: this strip, stretched over the card's top padding,
+          is everything above the text field. */}
+      <div
+        data-card-handle={step ? true : undefined}
+        className={`-mx-3 -mt-3 flex items-center gap-2 px-3 pt-3 ${step ? "cursor-grab active:cursor-grabbing" : ""}`}
+      >
         <span
           className={`h-3.5 w-3.5 shrink-0 rounded-full ${step?.done === 1 ? "bg-done" : "circle-inset"}`}
           aria-hidden="true"

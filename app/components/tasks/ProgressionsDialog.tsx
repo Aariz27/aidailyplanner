@@ -1,8 +1,10 @@
 "use client";
 
 import { Fragment, useEffect, useId, useRef, useState } from "react";
+import { reorderSteps } from "../../actions/steps";
 import { PILL } from "./pill";
 import StepBox from "./StepBox";
+import { useReorder } from "./useReorder";
 import type { Step, Task } from "../../types/db";
 import { TASK_GONE, type ActionResult } from "../../types/tasks";
 
@@ -86,6 +88,33 @@ export default function ProgressionsDialog({
     else setNotice(result.error);
   }
 
+  async function commitOrder(ids: number[]) {
+    const formData = new FormData();
+    formData.set("task_id", String(task.id));
+    formData.set("ids", ids.join(","));
+    handleSavingChange(true);
+    let result: ActionResult;
+    try {
+      result = await reorderSteps(null, formData);
+    } catch (caught) {
+      console.error("Reordering steps failed", caught);
+      result = { success: false, error: "Could not save. Try again." };
+    } finally {
+      handleSavingChange(false);
+    }
+    if (result.success) handleSaved(null);
+    else handleGone(result);
+    return result.success;
+  }
+
+  // Step cards are dragged by grabbing the card itself.
+  const { order, draggingId, itemProps } = useReorder(
+    steps.map((step) => step.id),
+    "x",
+    commitOrder,
+  );
+  const orderedSteps = order.flatMap((id) => steps.filter((step) => step.id === id));
+
   function addDraft() {
     const key = nextDraftKey.current++;
     setDrafts((current) => [...current, key]);
@@ -93,7 +122,7 @@ export default function ProgressionsDialog({
   }
 
   const boxes = [
-    ...steps.map((step) => ({ key: `step-${step.id}`, step, draftKey: null })),
+    ...orderedSteps.map((step) => ({ key: `step-${step.id}`, step, draftKey: null })),
     ...drafts.map((draftKey) => ({ key: `draft-${draftKey}`, step: null, draftKey })),
   ];
 
@@ -134,7 +163,15 @@ export default function ProgressionsDialog({
           {boxes.map((box, index) => (
             <Fragment key={box.key}>
               {index > 0 && <Arrow />}
-              <li>
+              <li
+                {...(box.step ? itemProps(box.step.id) : {})}
+                onPointerDown={(event) => {
+                  // Only the strip above the text field starts dragging the card.
+                  const target = event.target as HTMLElement;
+                  event.currentTarget.draggable = box.step !== null && target.closest("[data-card-handle]") !== null;
+                }}
+                className={`transition-opacity ${box.step && box.step.id === draggingId ? "opacity-40" : ""}`}
+              >
                 <StepBox
                   taskId={task.id}
                   number={index + 1}

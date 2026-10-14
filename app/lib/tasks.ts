@@ -1,10 +1,12 @@
 import { getDb } from "./db";
 import type { Step, Task } from "../types/db";
 
+const REPEAT_COLUMNS = "repeat_unit, repeat_every, repeat_days, repeat_start, repeat_until";
+
 export function listDumpTasks(): Task[] {
   return getDb()
     .prepare(
-      "SELECT id, title, due_date, status, created_at FROM tasks WHERE status != 'done' ORDER BY id DESC",
+      `SELECT id, title, due_date, status, created_at, ${REPEAT_COLUMNS} FROM tasks WHERE status != 'done' ORDER BY id DESC`,
     )
     .all() as Task[];
 }
@@ -20,7 +22,7 @@ export function listStepsForDumpTasks(): Step[] {
 // Every task of every status, for the Strategy tab.
 export function listAllTasks(): Task[] {
   return getDb()
-    .prepare("SELECT id, title, due_date, status, created_at FROM tasks ORDER BY id DESC")
+    .prepare(`SELECT id, title, due_date, status, created_at, ${REPEAT_COLUMNS} FROM tasks ORDER BY id DESC`)
     .all() as Task[];
 }
 
@@ -39,7 +41,7 @@ export function countDoneTasks(): number {
 
 export function listDoneTasks(): Task[] {
   return getDb()
-    .prepare("SELECT id, title, due_date, status, created_at FROM tasks WHERE status = 'done' ORDER BY id DESC")
+    .prepare(`SELECT id, title, due_date, status, created_at, ${REPEAT_COLUMNS} FROM tasks WHERE status = 'done' ORDER BY id DESC`)
     .all() as Task[];
 }
 

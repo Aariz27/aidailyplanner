@@ -6,7 +6,15 @@ export interface Task {
   due_date: string | null;
   status: TaskStatus;
   created_at: string;
+  // Null when the task does not repeat; see app/lib/repeat.ts.
+  repeat_unit: RepeatUnit | null;
+  repeat_every: number;
+  repeat_days: string | null;
+  repeat_start: string | null;
+  repeat_until: string | null;
 }
+
+export type RepeatUnit = "day" | "week" | "month";
 
 export interface Step {
   id: number;

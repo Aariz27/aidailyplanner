@@ -6,6 +6,8 @@ import { deleteTask, updateTask } from "../../actions/tasks";
 import { formatDueDate } from "../../lib/format";
 import { PILL, priorityLabel } from "./pill";
 import ProgressionsDialog from "./ProgressionsDialog";
+import RepeatPicker from "./RepeatPicker";
+import { describeRule, ruleFromTask } from "../../lib/repeat";
 import TitleTextarea from "./TitleTextarea";
 import type { Step, Task, TaskStatus } from "../../types/db";
 import { TASK_GONE, type ActionResult } from "../../types/tasks";
@@ -109,6 +111,7 @@ export default function TaskRow({
   const [progressionsOpen, setProgressionsOpen] = useState(false);
   // The small chart shows top-level steps only; sub-progressions live inside the pop-up.
   const topSteps = steps.filter((step) => step.parent_id === null);
+  const repeat = ruleFromTask(task);
   const editButtonRef = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef(false);
 
@@ -147,6 +150,21 @@ export default function TaskRow({
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-[13px] font-semibold break-words">{task.title}</div>
+          {repeat && (
+            <div className="mt-[3px] flex items-center gap-1 text-[11px] text-muted">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-3 w-3 shrink-0 fill-none stroke-current"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M17 2l3 3-3 3M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3M20 13v2a4 4 0 0 1-4 4H4" />
+              </svg>
+              <span>Repeats: {describeRule(repeat, task.repeat_start)}</span>
+            </div>
+          )}
           <div className="mt-[3px] flex items-start gap-3 text-[11px] text-muted">
             {topSteps.length > 0 && <MiniProgression steps={topSteps} />}
             {/* 114px lines the date up with the add form's date field: its 118px width plus the
@@ -252,6 +270,7 @@ function EditTaskForm({
 }) {
   const [title, setTitle] = useState(task.title);
   const [dueDate, setDueDate] = useState(task.due_date ?? "");
+  const [repeat, setRepeat] = useState(ruleFromTask(task));
   const titleId = useId();
   const dueId = useId();
   const errorId = useId();
@@ -291,6 +310,7 @@ function EditTaskForm({
           aria-describedby={error ? errorId : undefined}
           className="inset-sm px-3 py-2 text-[13px] leading-5 font-semibold text-text outline-none"
         />
+        <RepeatPicker value={repeat} start={task.repeat_start} onChange={setRepeat} />
         <div className="flex items-center gap-2">
           <label htmlFor={dueId} className="text-[11px] text-muted">
             Due date
@@ -324,46 +344,97 @@ function EditTaskForm({
 }
 
 function DeleteTaskButton({ taskId, title, onResult }: { taskId: number; title: string; onResult: OnResult }) {
-  const [confirming, setConfirming] = useState(false);
-  const [, formAction, pending] = useActionState(
+  const [asking, setAsking] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={(event) => {
+          // Safari does not focus a clicked button, and the pop-up returns focus to whatever had it.
+          event.currentTarget.focus();
+          setAsking(true);
+        }}
+        aria-label={`Delete ${title}`}
+        title="Delete"
+        className={ICON_BUTTON}
+      >
+        <svg viewBox="0 0 24 24" className={ICON} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3" />
+        </svg>
+      </button>
+      {asking && (
+        <ConfirmDeleteDialog taskId={taskId} title={title} onClose={() => setAsking(false)} onResult={onResult} />
+      )}
+    </>
+  );
+}
+
+// "Are you sure?" pop-up, so a stray click on the trash can never deletes a task.
+function ConfirmDeleteDialog({
+  taskId,
+  title,
+  onClose,
+  onResult,
+}: {
+  taskId: number;
+  title: string;
+  onClose: () => void;
+  onResult: OnResult;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const headingId = useId();
+  const [state, formAction, pending] = useActionState(
     async (prev: ActionResult | null, formData: FormData) => {
       const result = await deleteTask(prev, formData);
-      setConfirming(false);
-      onResult(result);
+      if (result.success || result.error === TASK_GONE) {
+        onResult(result);
+        dialogRef.current?.close();
+      }
       return result;
     },
     null,
   );
+  const error = state && !state.success && state.error !== TASK_GONE ? state.error : null;
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
 
   return (
-    <form
-      action={formAction}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setConfirming(false);
+    <dialog
+      ref={dialogRef}
+      aria-labelledby={headingId}
+      onClose={onClose}
+      onClick={(event) => {
+        // Only a click on the dimmed backdrop lands on the dialog element itself.
+        if (event.target === event.currentTarget) dialogRef.current?.close();
       }}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") setConfirming(false);
-      }}
+      className="m-auto w-[min(400px,calc(100vw-32px))] bg-transparent p-0 text-text backdrop:bg-black/40"
     >
-      <input type="hidden" name="id" value={taskId} />
-      {/* One button element whose type flips, so focus is not lost between the two clicks. */}
-      <button
-        type={confirming ? "submit" : "button"}
-        onClick={confirming ? undefined : () => setConfirming(true)}
-        disabled={pending}
-        aria-label={confirming ? `Confirm delete ${title}` : `Delete ${title}`}
-        title={confirming ? undefined : "Delete"}
-        className={confirming ? PILL : ICON_BUTTON}
-      >
-        {/* The second click keeps its words, so a delete is never one stray click. */}
-        {confirming ? (
-          "Confirm delete"
-        ) : (
-          <svg viewBox="0 0 24 24" className={ICON} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3" />
-          </svg>
+      <form action={formAction} className="ext-lg flex flex-col gap-4 p-6">
+        <input type="hidden" name="id" value={taskId} />
+        <h2 id={headingId} className="text-[15px] font-semibold">
+          Are you sure you want to delete this task?
+        </h2>
+        <p className="text-[13px] font-semibold break-words">{title}</p>
+        <p className="-mt-2 text-xs text-muted">Its progressions and sub-steps are deleted too, and it leaves today&apos;s priorities.</p>
+        {error && (
+          <p role="alert" className="text-xs text-warn">
+            {error}
+          </p>
         )}
-      </button>
-    </form>
+        <div className="flex justify-end gap-2">
+          {/* Cancel comes first and gets focus, so pressing Enter by habit does not delete. */}
+          <button type="button" autoFocus onClick={() => dialogRef.current?.close()} className={PILL}>
+            Cancel
+          </button>
+          <button type="submit" disabled={pending} className={`${PILL} text-warn`}>
+            Delete
+          </button>
+        </div>
+      </form>
+    </dialog>
   );
 }

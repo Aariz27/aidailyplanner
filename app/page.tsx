@@ -1,3 +1,4 @@
+import { applyRecurrence } from "./lib/recurrence";
 import PageHeader from "./components/layout/PageHeader";
 import TaskDumpList from "./components/tasks/TaskDumpList";
 import TodayColumn from "./components/priorities/TodayColumn";
@@ -18,6 +19,8 @@ import type { Step } from "./types/db";
 export const dynamic = "force-dynamic";
 
 export default function Home() {
+  // Reopen recurring tasks due today and add them to today, before reading anything.
+  applyRecurrence();
   const tasks = listDumpTasks();
   const today = todayDate();
   const priorities = listTodayPriorities(today);

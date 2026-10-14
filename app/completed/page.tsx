@@ -1,3 +1,4 @@
+import { applyRecurrence } from "../lib/recurrence";
 import PageHeader from "../components/layout/PageHeader";
 import TaskProgression from "../components/strategy/TaskProgression";
 import { listDoneTasks, listStepsForDoneTasks } from "../lib/tasks";
@@ -7,6 +8,8 @@ import type { Step } from "../types/db";
 export const dynamic = "force-dynamic";
 
 export default function CompletedPage() {
+  // Reopen recurring tasks due today and add them to today, before reading anything.
+  applyRecurrence();
   const tasks = listDoneTasks();
   const stepsByTask: Record<number, Step[]> = {};
   for (const step of listStepsForDoneTasks()) (stepsByTask[step.task_id] ??= []).push(step);

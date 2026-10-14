@@ -61,6 +61,7 @@ export function getDb(): Database.Database {
   conn.exec(SCHEMA);
   addPriorityStatus(conn);
   addStepParent(conn);
+  addTaskRepeat(conn);
   db = conn;
   return db;
 }
@@ -87,4 +88,21 @@ function addStepParent(conn: Database.Database): void {
     conn.exec("ALTER TABLE steps ADD COLUMN parent_id INTEGER REFERENCES steps(id) ON DELETE CASCADE");
   }
   conn.exec("CREATE INDEX IF NOT EXISTS steps_parent_id ON steps(parent_id)");
+}
+
+// A recurring task's rule: repeat every `repeat_every` days, weeks or months counted from
+// `repeat_start`, on the weekdays in `repeat_days` (0 = Sunday) for a weekly rule, until
+// `repeat_until` if set. `last_recurred` is the last day it was reopened and added to today.
+// A task that does not repeat keeps repeat_unit NULL.
+function addTaskRepeat(conn: Database.Database): void {
+  const columns = (conn.prepare("PRAGMA table_info(tasks)").all() as { name: string }[]).map((column) => column.name);
+  if (columns.includes("repeat_unit")) return;
+  conn.transaction(() => {
+    conn.exec("ALTER TABLE tasks ADD COLUMN repeat_unit TEXT CHECK (repeat_unit IN ('day', 'week', 'month'))");
+    conn.exec("ALTER TABLE tasks ADD COLUMN repeat_every INTEGER NOT NULL DEFAULT 1");
+    conn.exec("ALTER TABLE tasks ADD COLUMN repeat_days TEXT");
+    conn.exec("ALTER TABLE tasks ADD COLUMN repeat_start TEXT");
+    conn.exec("ALTER TABLE tasks ADD COLUMN repeat_until TEXT");
+    conn.exec("ALTER TABLE tasks ADD COLUMN last_recurred TEXT");
+  })();
 }
